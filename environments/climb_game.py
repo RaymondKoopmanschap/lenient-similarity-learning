@@ -1,6 +1,4 @@
-import pyspiel
 import random
-import numpy as np
 
 _NUM_PLAYERS = 2
 
