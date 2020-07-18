@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from scipy.stats import uniform, norm
+from scipy.stats import norm
 
 np.random.seed(3)
 size = 30
@@ -40,8 +40,7 @@ plt.grid()
 
 plt.show()
 
-### Multi-modal stuff
-
+# Multi-modal stuff
 mu_1 = 0
 mu_2 = 10
 mu_3 = 5

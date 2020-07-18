@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 from scipy.stats import uniform
 from tqdm import tqdm
 import time
-from open_spiel.python.DMARL.similarity_metrics import *
+from algorithms.similarity_metrics import *
+import os
 
 
 def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type, metric, alpha, count1, count2):
@@ -369,9 +370,3 @@ plot_overlap_trend = True
 # similarity_metric_experiments(metrics1, dist_type1, sample_sizes1, num_iterations1, plot_overlap_trend, plot=False,
 #                               show_time=False, num_bins_list=[11], bin_experiments=False)
 #######################################################################################################################
-a = np.zeros((5, 5))
-print(a)
-t = np.array([[1, 2, 3, 4, 5]]).T
-print(t.shape)
-a = np.hstack((t, a))
-print(a)

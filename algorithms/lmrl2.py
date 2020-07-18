@@ -92,7 +92,7 @@ class LMRL2(object):
             else:
                 self.sim_metric = None
 
-            """ the code below can indicate six different algorithms
+            """ the code below can indicate seven different algorithms
                 lenient learning:            (ll)   if alpha_sim = alpha      and prob = temp prob
                 lenient similarity learning: (lsl)  if alpha_sim = alpha      and prob = l
                 lenient hysteretic learning: (lhl)  if alpha_sim = 0          and prob = temp prob

@@ -97,7 +97,7 @@ def shape_dim_for_plot(iter_avg, n_runs, data, run):
 
 
 def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg):
-    interval = 1000
+    interval = 2000
     markers_on1 = np.linspace(start=0, stop=(num_episodes/iter_avg)-interval/iter_avg,
                              num=int(num_episodes/interval)).astype(int).tolist()
     step_size = markers_on1[1] - markers_on1[0]
