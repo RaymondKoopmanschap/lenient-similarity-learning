@@ -48,7 +48,7 @@ def plot_ellipses():
 
 def write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, sample_efficiency_mean_results,
                  sample_efficiency_std_results, sample_efficiency_list_results):
-    folder = 'data'
+    folder = f'data_{algo_name}_{metric}_{num_episodes}'
     if not os.path.exists(folder):
         os.makedirs(folder)
     fields = ['Temp decay'] + e_decays
