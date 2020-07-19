@@ -17,9 +17,9 @@ NUM_STATES_PLOT = 1  # 1 is the only option for now
 def main(args):
     game_type = args.game_type
     if args.game == "CB":
-        game = ClimbGame(type=game_type)
+        game = ClimbGame(game_type=game_type)
     elif args.game == "ECB":
-        game = ExtendedClimbGame(type=game_type)
+        game = ExtendedClimbGame(game_type=game_type)
     elif args.game == "RO3":
         game = R03Game()
     else:

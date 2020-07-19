@@ -4,12 +4,12 @@ _NUM_PLAYERS = 2
 
 
 class ClimbGame(object):
-    def __init__(self, type='det'):
+    def __init__(self, game_type='det'):
         self.num_agents = 2
         self.num_states = 1
         self.num_max_actions = 3
         self.terminal = False
-        self.type = type  # det, ps, fs
+        self.game_type = game_type  # det, ps, fs
         self.matrix = [[11, -30, 0], [-30, 7, 6], [0, 0, 5]]
 
     def new_game(self):
@@ -25,14 +25,14 @@ class ClimbGame(object):
             print("invalid state")
             return None
         a_1, a_2 = actions
-        if self.type == 'det':
+        if self.game_type == 'det':
             return state, self.matrix[a_1][a_2]
-        if self.type == 'ps':
+        if self.game_type == 'ps':
             if actions == (1, 1):
                 return state, random.choice([14, 0])
             else:
                 return state, self.matrix[a_1][a_2]
-        if self.type == 'fs':
+        if self.game_type == 'fs':
             if (a_1, a_2) == (0, 0):
                 return state, random.choice([10, 12])
             if (a_1, a_2) == (0, 1):
