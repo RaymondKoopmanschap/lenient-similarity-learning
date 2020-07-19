@@ -3,12 +3,12 @@ import numpy as np
 
 
 class ExtendedClimbGame(object):
-    def __init__(self, type='det'):
+    def __init__(self, game_type='det'):
         self.num_agents = 2
         self.num_states = 10
         self.num_max_actions = 3
         self.terminal = False
-        self.type = type  # det, ps, fs
+        self.game_type = game_type  # det, ps, fs
         self.matrix = [[11, -30, 0], [-30, 7, 6], [0, 0, 5]]
         self.state_action_map = {1: (0, 0), 2: (0, 1), 3: (0, 2), 4: (1, 0),
                                  5: (1, 1), 6: (1, 2), 7: (2, 0), 8: (2, 1), 9: (2, 2)}
@@ -23,14 +23,16 @@ class ExtendedClimbGame(object):
             a_1, a_2 = self.state_action_map[state]
             self.terminal = True
             state = 'terminal'
-            if self.type == 'det':
+            if self.game_type == 'det':
                 return state, self.matrix[a_1][a_2]
-            elif self.type == 'ps':
+            elif self.game_type == 'ps':
                 if (a_1, a_2) == (1, 1):
                     return state, random.choice([14, 0])
+                # if (a_1, a_2) == (2, 2):
+                #     return state, random.choice([16, 0])
                 else:
                     return state, self.matrix[a_1][a_2]
-            elif self.type == 'fs':
+            elif self.game_type == 'fs':
                 if (a_1, a_2) == (0, 0):
                     return state, random.choice([10, 12])
                 if (a_1, a_2) == (0, 1):
@@ -49,7 +51,7 @@ class ExtendedClimbGame(object):
                     return state, random.choice([5, -5])
                 if (a_1, a_2) == (2, 2):
                     return state, random.choice([10, 0])
-            elif self.type == 'normal':
+            elif self.game_type == 'normal':
                 return state, np.random.normal(loc=self.matrix[a_1][a_2], scale=5)
             else:
                 print("invalid type")

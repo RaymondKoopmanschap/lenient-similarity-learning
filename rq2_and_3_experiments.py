@@ -29,7 +29,6 @@ def main(args):
     num_states = game.get_num_states()
     num_actions = game.get_max_num_actions()
     min_r, max_r, leniency, omega = get_lenient_parameters(game, game_type)
-
     # Parameters for the run
     print_runs = args.print_runs
     write_to_csv_bool = args.write_to_csv
@@ -42,7 +41,7 @@ def main(args):
     metric = args.sim_metric  # options are dif_hist, ovl, ks, hellinger, jsd, emd, tdl
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
-    if args.grid_search == 'll':
+    if args.grid_search == 'large':
         e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
                     0.999]
@@ -127,7 +126,7 @@ def main(args):
 
         # Writing results to csv file
         if write_to_csv_bool:
-            write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results,
+            write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, game_type,
                          sample_efficiency_mean_results, sample_efficiency_std_results, sample_efficiency_list_results)
 
     # plotting_all(algo, algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
@@ -152,7 +151,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-g", "--grid_search", type=str, help="parameter to use the same grid search as is used in the "
                                                               "experiments (this replaces e_decays and t_decays args). "
-                                                              "Choose between: ll")
+                                                              "Choose between: large")
     parser.add_argument("-e", "--e_decays", type=float,
                         help="give the epsilon decay parameter to use")
     parser.add_argument("-t", "--t_decays", type=float,

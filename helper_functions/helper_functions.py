@@ -14,7 +14,7 @@ def get_lenient_parameters(game, game_type):
             leniency = 10 ** 7
             min_r = -30
             max_r = 11
-        if game_type == 'ps':
+        elif game_type == 'ps':
             leniency = 10 ** 3
             min_r = -30
             max_r = 14
@@ -46,31 +46,31 @@ def plot_ellipses():
     plt.gcf().gca().add_artist(ellipse3)
 
 
-def write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, sample_efficiency_mean_results,
-                 sample_efficiency_std_results, sample_efficiency_list_results):
-    folder = f'data_{algo_name}_{metric}_{num_episodes}'
+def write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, game_type,
+                 sample_efficiency_mean_results, sample_efficiency_std_results, sample_efficiency_list_results):
+    folder = f'data_{algo_name}_{game_type}_{metric}_{num_episodes}'
     if not os.path.exists(folder):
         os.makedirs(folder)
     fields = ['Temp decay'] + e_decays
-    filename = f'cp_{algo_name}_{metric}_{num_episodes}.csv'
+    filename = f'cp_{algo_name}_{game_type}_{metric}_{num_episodes}.csv'
     path = os.path.join(folder, filename)
     with open(path, 'w') as csvfile_cp:
         csvwriter_cp = csv.writer(csvfile_cp)
         csvwriter_cp.writerow(fields)
         csvwriter_cp.writerows(correct_policy_results)
-    filename = f'se_mean_{algo_name}_{metric}_{num_episodes}.csv'
+    filename = f'se_mean_{algo_name}_{game_type}_{metric}_{num_episodes}.csv'
     path = os.path.join(folder, filename)
     with open(path, 'w') as csvfile_se_mean:
         csvwriter_se_mean = csv.writer(csvfile_se_mean)
         csvwriter_se_mean.writerow(fields)
         csvwriter_se_mean.writerows(sample_efficiency_mean_results)
-    filename = f'se_std_{algo_name}_{metric}_{num_episodes}.csv'
+    filename = f'se_std_{algo_name}_{game_type}_{metric}_{num_episodes}.csv'
     path = os.path.join(folder, filename)
     with open(path, 'w') as csvfile_se_std:
         csvwriter_se_std = csv.writer(csvfile_se_std)
         csvwriter_se_std.writerow(fields)
         csvwriter_se_std.writerows(sample_efficiency_std_results)
-    filename = f'se_list_{algo_name}_{metric}_{num_episodes}.csv'
+    filename = f'se_list_{algo_name}_{game_type}_{metric}_{num_episodes}.csv'
     path = os.path.join(folder, filename)
     with open(path, 'w') as csvfile_se_list:
         csvwriter_se_list = csv.writer(csvfile_se_list)
