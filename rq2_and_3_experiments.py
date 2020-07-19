@@ -41,7 +41,10 @@ def main(args):
     metric = args.sim_metric  # options are dif_hist, ovl, ks, hellinger, jsd, emd, tdl
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
-    if args.grid_search == 'large':
+    if args.grid_search == 'small':
+        e_decays = [0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995]
+        t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995]
+    elif args.grid_search == 'large':
         e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
                     0.999]
@@ -151,7 +154,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-g", "--grid_search", type=str, help="parameter to use the same grid search as is used in the "
                                                               "experiments (this replaces e_decays and t_decays args). "
-                                                              "Choose between: large")
+                                                              "Choose between: small and large")
     parser.add_argument("-e", "--e_decays", type=float,
                         help="give the epsilon decay parameter to use")
     parser.add_argument("-t", "--t_decays", type=float,
