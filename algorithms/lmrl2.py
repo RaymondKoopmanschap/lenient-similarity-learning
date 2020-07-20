@@ -120,14 +120,12 @@ class LMRL2(object):
                 pass
             # Temperature update
             if next_s != 'terminal':  # Only updating the temperature value of the first state
-                # self.t_values[pid][0][a[pid]] = self.t_decay * self.t_values[pid][0][a[pid]]
                 self.t_values[pid][s][a[pid]] = self.t_decay * ((1 - self.temp_diffusion)*self.t_values[pid][s][a[pid]]
                                               + self.temp_diffusion*np.mean(self.t_values[pid][next_s][0:1]))
                 # THIS [0:1] IS ONLY FOR THE EXTENDED CLIMB GAME AS AN EASY FIX !
             else:
-                # pass
                 self.t_values[pid][s][a[pid]] = self.t_decay * self.t_values[pid][s][a[pid]]
-            # print(self.t_values[pid][0])
+
             # Building up the list
             if self.dist:
                 prob2 = 1

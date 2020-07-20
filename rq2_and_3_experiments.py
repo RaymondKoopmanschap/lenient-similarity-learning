@@ -29,25 +29,30 @@ def main(args):
     num_states = game.get_num_states()
     num_actions = game.get_max_num_actions()
     min_r, max_r, leniency, omega = get_lenient_parameters(game, game_type)
+
     # Parameters for the run
     print_runs = args.print_runs
     write_to_csv_bool = args.write_to_csv
     n_runs = args.n_runs
     iter_avg = args.iter_avg
     num_episodes = args.num_episodes
+    plotting = args.plotting
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
     metric = args.sim_metric  # options are dif_hist, ovl, ks, hellinger, jsd, emd, tdl
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
-    if args.grid_search == 'small':
+    if args.grid_search == 'det':
+        e_decays = [0.9993, 0.9994, 0.9995, 0.9996]
+        t_decays = [0.997, 0.998, 0.999, 0.9995]
+    elif args.grid_search == 'small':
         e_decays = [0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995]
         t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995]
     elif args.grid_search == 'large':
-        e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
-                    0.999]
+        e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]  # 0.9991, 0.9992,
+        t_decays = [0.92]  # 0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998,
+        # 0.9985, 0.999
     algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
     debug_run = args.debug_run
 
@@ -92,9 +97,10 @@ def main(args):
                         algo.next_step(actions, cur_state, next_state, reward)
 
                         # Collect values for plotting
-                        collect_values_for_plotting(cur_state, next_state, reward, rewards, delta_rec, q_values, algo,
-                                                    action_list, j_a_dict, actions, joint_actions, sim_metric,
-                                                    sim_met_per_j_a, algo_name, NUM_AGENTS)
+                        if plotting:
+                            collect_values_for_plotting(cur_state, next_state, reward, rewards, delta_rec, q_values,
+                                                        algo, action_list, j_a_dict, actions, joint_actions, sim_metric,
+                                                        sim_met_per_j_a, algo_name, NUM_AGENTS)
 
                     if np.argmax(algo.q_values[0][0]) == 0 and np.argmax(algo.q_values[1][0]) == 0:
                         sample_counter = sample_counter + 1
@@ -132,22 +138,23 @@ def main(args):
             write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, game_type,
                          sample_efficiency_mean_results, sample_efficiency_std_results, sample_efficiency_list_results)
 
-    # plotting_all(algo, algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
-    #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, font_size=9)
+    if plotting:
+        # Plotting for report (use the size that is directly given, do not rescale plot)
+        plt.rcParams.update({'font.size': 14})
+        plt.figure()
+        qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
+        plt.ylim(bottom=0, top=15)
+        plt.subplots_adjust(left=0.1, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
+        plt.show()
+        plt.figure()
+        action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
+        plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
+        plt.show()
+        # phase_plot(action_list, 0, iter_avg, n_runs, num_episodes, NUM_AGENTS)
+        # plt.show()
 
-    # Plotting for report (use the size that is directly given, do not rescale plot)
-    plt.rcParams.update({'font.size': 14})
-    plt.figure()
-    qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
-    plt.ylim(bottom=0, top=15)
-    plt.subplots_adjust(left=0.1, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
-    plt.show()
-    plt.figure()
-    action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
-    plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
-    plt.show()
-    # phase_plot(action_list, 0, iter_avg, n_runs, num_episodes, NUM_AGENTS)
-    # plt.show()
+        # plotting_all(algo, algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
+        #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, font_size=9)
 
 
 if __name__ == "__main__":
@@ -168,12 +175,13 @@ if __name__ == "__main__":
     parser.add_argument("--game_type", type=str, help="Choose game type: det, ps or fs, not needed for RO3",
                         default='ps')
     parser.add_argument("--game", type=str, help="Choose game: CB, ECB or RO3", default='ECB')
-    parser.add_argument("--beta", type=float, help="Choose beta needed for hysteretic learning versions", default=0.01)
+    parser.add_argument("--beta", type=float, help="Choose beta needed for hysteretic learning versions", default=0)
     parser.add_argument("--sim_metric", type=str, help="Choose a similarity metric: ovl, emd, ks, tdl, hellinger, jsd",
                         default='ovl')
     parser.add_argument("--algo_name", type=str,
                         help="Choose which algorithm to use: ll, lsl, lhl, lhsl, hl, hsl, lsdl", default='ll')
     parser.add_argument("--debug_run", type=int, help="Choose to show a specific run in the plot. The number of runs "
                                                       "has to go until that number", default=None)
+    parser.add_argument("--plotting", type=bool, help="Specify if you want to plot or not", default=False)
     args = parser.parse_args()
     main(args)
