@@ -53,6 +53,9 @@ def main(args):
         e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
                     0.999]
+    elif args.grid_search == 'lsdl':
+        e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
+        t_decays = [0.8, 0.85, 0.9]
     algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
     debug_run = args.debug_run
 
