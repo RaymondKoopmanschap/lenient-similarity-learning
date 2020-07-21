@@ -43,25 +43,31 @@ def main(args):
     metric = args.sim_metric  # ovl, ks, hellinger, jsd, emd, tdl
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
+    # Lenient learning
     if args.grid_search == 'det_ll':
         e_decays = [0.9993, 0.9994, 0.9995, 0.9996]
         t_decays = [0.997, 0.998, 0.999, 0.9995]
-    elif args.grid_search == 'det_sim':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998]
-        t_decays = [0.95, 0.97, 0.98, 0.99, 0.995, 0.997, 0.998]
-    elif args.grid_search == 'lhsl_ps_beta0':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.9985, 0.9999]
-        t_decays = [0.94, 0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925]
-    elif args.grid_search == 'large':
+    elif args.grid_search == 'ps_and_fs_ll':
         e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
                     0.999]
-    elif args.grid_search == 'lsdl':
-        e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.8, 0.85, 0.9]
-    elif args.grid_search == 'lhsl':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.75, 0.80]
+    # Lenient similarity learning
+    elif args.grid_search == 'det_sim':
+        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998]
+        t_decays = [0.95, 0.97, 0.98, 0.99, 0.995, 0.997, 0.998]
+    elif args.grid_search == 'ps_lhsl_beta0':
+        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.9985, 0.9999]
+        t_decays = [0.94, 0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925]
+    elif args.grid_search == 'ps_lhsl_beta001':
+        e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998]
+        t_decays = [0.94, 0.95, 0.96, 0.97, 0.975, 0.98, 0.985]
+    elif args.grid_search == 'ps_lsdl':
+        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
+        t_decays = [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.975]
+    elif args.grid_search == 'fs_sim':
+        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.999985]
+        t_decays = [0.75, 0.8, 0.85, 0.9, 0.95]
+
     algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
     debug_run = args.debug_run
 
