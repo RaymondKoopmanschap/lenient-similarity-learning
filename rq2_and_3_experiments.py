@@ -151,7 +151,7 @@ def main(args):
 
         # Writing results to csv file
         if write_to_csv_bool:
-            write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, game_type,
+            write_to_csv(e_decays, algo_name, metric, num_episodes, correct_policy_results, game_type, beta,
                          sample_efficiency_mean_results, sample_efficiency_std_results, sample_efficiency_list_results)
 
     if plotting:
