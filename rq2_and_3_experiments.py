@@ -40,7 +40,7 @@ def main(args):
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
-    metric = args.sim_metric  # options are dif_hist, ovl, ks, hellinger, jsd, emd, tdl
+    metric = args.sim_metric  # ovl, ks, hellinger, jsd, emd, tdl
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
     if args.grid_search == 'det_ll':
@@ -60,8 +60,8 @@ def main(args):
         e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.8, 0.85, 0.9]
     elif args.grid_search == 'lhsl':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.999985, 0.9999]
-        t_decays = [0.92, 0.93, 0.94]
+        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
+        t_decays = [0.75, 0.80]
     algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
     debug_run = args.debug_run
 
@@ -69,6 +69,13 @@ def main(args):
     sample_efficiency_mean_results = np.zeros((len(t_decays), len(e_decays) + 1))
     sample_efficiency_std_results = np.zeros((len(t_decays), len(e_decays) + 1))
     sample_efficiency_list_results = []
+
+    print(f'e_decays: {e_decays}\n'
+          f't_decays: {t_decays}\n'
+          f'game type: {game_type}\n'
+          f'algo name: {algo_name}\n'
+          f'sim metric: {metric}\n'
+          f'beta: {beta}')
 
     for t_index, t_decay in enumerate(t_decays):
         correct_policy_results[t_index, 0] = t_decay

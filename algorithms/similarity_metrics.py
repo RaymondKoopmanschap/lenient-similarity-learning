@@ -102,6 +102,8 @@ def tdl_for_plot(base_samples, target_samples, tau, type='sum'):
 
 
 def tdl(base_samples, target_samples, tau):
+    if len(target_samples) < 2:
+        return 0
     base_samples = np.sort(np.array(base_samples))
     target_samples = np.sort(target_samples)
     first_mean = (target_samples[0] + target_samples[1]) / 2
