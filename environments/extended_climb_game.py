@@ -34,6 +34,15 @@ class ExtendedClimbGame(object):
                 #     return state, random.choice([11, 11])
                 else:
                     return state, self.matrix[a_1][a_2]
+            elif self.game_type == 'ps2':
+                if (a_1, a_2) == (1, 1):
+                    return state, random.choice([14, 0])
+                if (a_1, a_2) == (2, 2):
+                    return state, np.random.choice([16, 0])
+                # if (a_1, a_2) == (0, 0):
+                #     return state, random.choice([11, 11])
+                else:
+                    return state, self.matrix[a_1][a_2]
             elif self.game_type == 'fs':
                 if (a_1, a_2) == (0, 0):
                     return state, random.choice([10, 12])
