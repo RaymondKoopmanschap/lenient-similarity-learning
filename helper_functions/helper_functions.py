@@ -14,7 +14,7 @@ def get_lenient_parameters(game, game_type):
             leniency = 10 ** 7
             min_r = -30
             max_r = 11
-        elif game_type == 'ps':
+        elif game_type == 'ps' or game_type == 'ps2':
             leniency = 10 ** 3
             min_r = -30
             max_r = 14
