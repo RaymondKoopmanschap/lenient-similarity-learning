@@ -8,7 +8,7 @@ from algorithms.similarity_metrics import *
 class LMRL2(object):
 
     def __init__(self, states, beta, leniency, e_decay, t_decay,
-                 min_r, max_r, game, algo, metric='dif_hist', init=0):
+                 min_r, max_r, game, algo_name, n_samples, metric='dif_hist', init=0):
         # parameters
         self.num_pids = 2  # player ids
         self.num_a = 3
@@ -24,7 +24,7 @@ class LMRL2(object):
         self.q_values = None
         self.game = game
         self.init = init  # 0 or min_r
-        self.algo = algo
+        self.algo = algo_name
 
         # Leniency parameters
         self.t_decay = t_decay
@@ -37,17 +37,24 @@ class LMRL2(object):
                                  5: (1, 1), 6: (1, 2), 7: (2, 0), 8: (2, 1), 9: (2, 2)}
         # For now use the same temperature for every state (as if there was one state)
         self.t_values = None
-        # if dist:
         self.return_dist = None
         self.dist_id = None
-        self.n_samples = 20
+        self.n_samples = n_samples
         self.sim_metric = None
         self.metric_name = metric
-        if 's' in algo:
+        if 's' in self.algo:
             self.dist = True
         else:
             self.dist = False
-        self.bins = np.linspace(self.min_r, self.max_r + 0.000001, int(self.max_r - self.min_r) + 1)
+        self.bins = np.linspace(self.min_r, self.max_r + 0.000001, int(self.max_r - self.min_r) + 1)  # + 1
+
+        # For collecting values
+        self.j_a_0_0 = [[[], []], [[], []]]  # first index is agent number, second: sim value or iteration
+        self.j_a_0_1 = [[[], []], [[], []]]
+        self.j_a_0_2 = [[[], []], [[], []]]
+        self.j_a_1_0 = [[[], []], [[], []]]
+        self.j_a_1_1 = [[[], []], [[], []]]
+        self.j_a_2_0 = [[[], []], [[], []]]
 
     def reset_values(self):
         self.q_values = [[[self.init for _ in range(self.num_a)]
@@ -76,7 +83,7 @@ class LMRL2(object):
             action = self.q_values[pid_id][state].index(max(self.q_values[pid_id][state][0:len(pos_a)]))
         return action
 
-    def next_step(self, a, s, next_s, r):
+    def next_step(self, a, s, next_s, r, i):
         self.epsilon = self.epsilon * self.epsilon_decay  # 0.999
         for pid in range(self.num_pids):
             # Calculating delta
@@ -92,23 +99,29 @@ class LMRL2(object):
             else:
                 self.sim_metric = None
 
+            # if delta <= 0:
+            #     self.collecting_similarity_values_for_plot(pid, a, i)
+
             """ the code below can indicate seven different algorithms
                 lenient learning:            (ll)   if alpha_sim = alpha      and prob = temp prob
                 lenient similarity learning: (lsl)  if alpha_sim = alpha      and prob = l
                 lenient hysteretic learning: (lhl)  if alpha_sim = 0          and prob = temp prob
                 lenient hyst. sim. learning: (lhsl) if alpha_sim = alpha * l  and prob = temp prob
-                hysteretic learning:         (hl)   if alpha_sim = 0          and prob = 1
-                hysteretic sim. learning:    (hsl)  if alpha_sim = alpha * l  and prob = 1
+                hysteretic learning:         (hl)   if alpha_sim = 0          and prob = 1 
+                hysteretic sim. learning:    (hsl)  if alpha_sim = alpha * l  and prob = 1 (change ret dist)
                 lenient sim. Daan learning:  (lsdl) if alpha_sim = alpha      and prob = min(l, temp prob)"""
 
             alpha_sim = self.calculate_alpha_sim()
-            prob = self.calculate_prob(a, s, pid)
+            prob = self.calculate_prob(a, s, pid)  # uses the similarity metric
             # print(f'sim metric: {self.sim_metric}')
             # print(f'alpha: {alpha_sim}')
             # print(f'prob: {prob}')
 
-            # The Q-learning update
             rand = random.random()
+            # if 70 < i < 300:
+            #     print(f'i: {i}, pid {pid}, a {a}, updated: {rand < prob}, prob: {prob}')
+
+            # The Q-learning update
             if delta >= 0 or rand < prob:  # the lenient learning check (higher prob more likely to update)
                 if delta >= 0:  # the hysteretic learning check
                     self.q_values[pid][s][a[pid]] = self.q_values[pid][s][a[pid]] + self.alpha * delta
@@ -133,7 +146,7 @@ class LMRL2(object):
                     if next_s != 'terminal':
                         ret = r + self.gamma * max(self.q_values[pid][next_s])
                     else:
-                        ret = r
+                        ret = self.q_values[pid][s][a[pid]]  # r
                     if len(self.return_dist[pid][s][a[pid]]) < self.n_samples:
                         self.return_dist[pid][s][a[pid]].append(ret)
                     # List is complete and replace the oldest value
@@ -143,13 +156,6 @@ class LMRL2(object):
                             self.dist_id[pid][s][a[pid]] += 1
                         else:
                             self.dist_id[pid][s][a[pid]] = 0
-
-                    # if next_s != 'terminal' and 2000 < i < 3000:
-                    #     cur_dist = self.return_dist[pid][s][a[pid]]
-                    #     max_action = self.q_values[pid][next_s].index(max(self.q_values[pid][next_s]))
-                    #     next_dist = r + self.gamma * np.asarray(self.return_dist[pid][next_s][max_action])
-                    #     # print(f'i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
-                    #     #       f'{cur_dist}, {list(next_dist)}')
 
     def calculate_similarity(self, a, s, next_s, r, pid, delta):
         if next_s == 'terminal':
@@ -180,10 +186,21 @@ class LMRL2(object):
             else:
                 print('Choose a valid similarity metric')
                 self.sim_metric = None
-            # print(f'hist1: {self.dif_hist(dist, next_dist)}, hist2: {self.dif_hist2(dist, next_dist)}, cur dist: {dist}'
-            #       f', next dist: {next_dist}, bins: {self.bins}')
+            # if 0 < i < 1500:  # 7000 < i < 9000:
+            #     print(f'i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
+            #           f'Q-value next actions: {self.q_values[pid][next_s]}, Q-value state 0: {self.q_values[pid][0]}, '
+            #           f'next state:{next_s}, temp_prob: {1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))}'
+            #           f'\n{dist}, \n{list(next_dist)}')
         else:
             self.sim_metric = 0  # if sim metric not calculated it is 0
+            # dist = self.return_dist[pid][s][a[pid]]  # current distribution
+            # max_action = self.q_values[pid][next_s].index(max(self.q_values[pid][next_s]))
+            # next_dist = r + self.gamma * np.asarray(self.return_dist[pid][next_s][max_action])
+            # if 0 < i < 500:  # 7000 < i < 9000:
+            #     print(f'else i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
+            #           f'Q-value next actions: {self.q_values[pid][next_s]}, Q-value state 0: {self.q_values[pid][0]}, '
+            #           f'next state:{next_s}, temp_prob: {1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))}'
+            #           f'\n{dist}, \n{list(next_dist)}\n')
 
     def calculate_alpha_sim(self):
         if self.algo in ['ll', 'lsl', 'lsdl']:
@@ -209,3 +226,23 @@ class LMRL2(object):
         else:
             print("Use a valid algorithm: ll, lsl, lhl, lhsl, hl, hsl or lsdl")
             exit()
+
+    def collecting_similarity_values_for_plot(self, pid, actions, iteration):
+        if actions == (0, 0):
+            self.j_a_0_0[pid][0].append(self.sim_metric)
+            self.j_a_0_0[pid][1].append(iteration)
+        elif actions == (0, 1):
+            self.j_a_0_1[pid][0].append(self.sim_metric)
+            self.j_a_0_1[pid][1].append(iteration)
+        elif actions == (0, 2):
+            self.j_a_0_2[pid][0].append(self.sim_metric)
+            self.j_a_0_2[pid][1].append(iteration)
+        elif actions == (1, 0):
+            self.j_a_1_0[pid][0].append(self.sim_metric)
+            self.j_a_1_0[pid][1].append(iteration)
+        elif actions == (1, 1):
+            self.j_a_1_1[pid][0].append(self.sim_metric)
+            self.j_a_1_1[pid][1].append(iteration)
+        elif actions == (2, 0):
+            self.j_a_2_0[pid][0].append(self.sim_metric)
+            self.j_a_2_0[pid][1].append(iteration)

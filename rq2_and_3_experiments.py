@@ -36,11 +36,12 @@ def main(args):
     n_runs = args.n_runs
     iter_avg = args.iter_avg
     num_episodes = args.num_episodes
-    plotting = args.plotting
+    interval_plotting = args.interval
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
     metric = args.sim_metric  # ovl, ks, hellinger, jsd, emd, tdl
+    n_samples = args.n_samples  # default 20
     e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decays]
     # Lenient learning
@@ -65,14 +66,24 @@ def main(args):
         e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
         t_decays = [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.975]
     elif args.grid_search == 'fs_sim':
-        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998,0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985]
+        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985]
         t_decays = [0.75, 0.8, 0.85, 0.9, 0.95]
+    elif args.grid_search == 'normal':  # 66
+        e_decays = [0.9991, 0.9993, 0.9995,  0.9997, 0.9998, 0.9999]
+        t_decays = [0.9, 0.92, 0.94, 0.96, 0.97, 0.98, 0.99, 0.995, 0.9975, 0.9985, 0.999, 0.9995]
+    elif args.grid_search == 'lsl':
+        e_decays = [0.9991, 0.9993, 0.9995, 0.9997, 0.9998, 0.9999]
+        t_decays = [0]
 
     algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
     debug_run = args.debug_run
+    if len(e_decays) == 1:
+        plotting = True
+    else:
+        plotting = False
 
     correct_policy_results = np.zeros((len(t_decays), len(e_decays) + 1))
-    sample_efficiency_mean_results = np.zeros((len(t_decays), len(e_decays) + 1))
+    sample_efficiency_mean_results = np.zeros((len(t_decays), len(e_decays)))
     sample_efficiency_std_results = np.zeros((len(t_decays), len(e_decays) + 1))
     sample_efficiency_list_results = []
 
@@ -85,7 +96,6 @@ def main(args):
 
     for t_index, t_decay in enumerate(t_decays):
         correct_policy_results[t_index, 0] = t_decay
-        sample_efficiency_mean_results[t_index, 0] = t_decay
         sample_efficiency_std_results[t_index, 0] = t_decay
         for e_index, e_decay in enumerate(e_decays):
             random.seed(1)
@@ -99,9 +109,10 @@ def main(args):
             joint_actions = [[[] for _ in range(num_actions ** NUM_AGENTS)] for _ in range(NUM_STATES_PLOT)]
             sim_met_per_j_a = [[[] for _ in range(num_actions ** NUM_AGENTS)] for _ in range(NUM_STATES_PLOT)]
             j_a_dict = {(0, 0): 0, (0, 1): 1, (0, 2): 2, (1, 0): 3, (1, 1): 4, (1, 2): 5, (2, 0): 6, (2, 1): 7, (2, 2): 8}
+            test_state = []
 
             algo = LMRL2(num_states, beta, leniency, e_decay, t_decay, min_r, max_r, game,
-                         algo_name, metric=metric, init=min_r)
+                         algo_name, n_samples, metric=metric, init=min_r)
             # Training
             for run in tqdm(range(n_runs)):
                 algo.reset_values()
@@ -116,7 +127,7 @@ def main(args):
                         a_2 = algo.select_action(poss_actions, cur_state, 1)
                         actions = (a_1, a_2)
                         next_state, reward = game.next_step(cur_state, actions)
-                        algo.next_step(actions, cur_state, next_state, reward)
+                        algo.next_step(actions, cur_state, next_state, reward, i)
 
                         # Collect values for plotting
                         if plotting:
@@ -128,6 +139,10 @@ def main(args):
                         sample_counter = sample_counter + 1
                     else:
                         sample_counter = 0
+
+                    # test_state.append(algo.q_values[0][5][0])
+                    # if i % 10 == 0:
+                    #     print(algo.q_values[0][5])
 
                 # Calculate correct policies
                 if np.argmax(algo.q_values[0][0]) == 0 and np.argmax(algo.q_values[1][0]) == 0:
@@ -151,7 +166,7 @@ def main(args):
             print(f'mean sample efficiency: {se_mean}, std: {se_std}')
             print(f'correct policies: {correct_policies / n_runs * 100}%\n')
             correct_policy_results[t_index, e_index + 1] = correct_policies / n_runs * 100
-            sample_efficiency_mean_results[t_index, e_index + 1] = np.round(se_mean, decimals=0)
+            sample_efficiency_mean_results[t_index, e_index] = np.round(se_mean, decimals=0)
             sample_efficiency_std_results[t_index, e_index + 1] = se_std
             sample_efficiency_list_results.append([t_decay, e_decay] + sample_efficiencies)
 
@@ -164,19 +179,43 @@ def main(args):
         # Plotting for report (use the size that is directly given, do not rescale plot)
         plt.rcParams.update({'font.size': 14})
         plt.figure()
-        qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
-        plt.ylim(bottom=0, top=15)
+        qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                    run=debug_run)
+        plt.ylim(bottom=-5)  # , top=18
+        # plt.xlim(left=200)
         plt.subplots_adjust(left=0.1, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
         plt.show()
-        plt.figure()
-        action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, run=debug_run)
-        plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
-        plt.show()
+        # plt.figure()
+        # action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+        # run=debug_run)
+        # plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
+        # plt.show()
         # phase_plot(action_list, 0, iter_avg, n_runs, num_episodes, NUM_AGENTS)
         # plt.show()
 
-        # plotting_all(algo, algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
-        #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, font_size=9)
+        # plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
+        #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
+        #              interval_plotting, font_size=9)
+
+        # plt.scatter(algo.j_a_0_0[0][1], algo.j_a_0_0[0][0], label='action (0, 0)')
+        # plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='action (0, 1)')
+        # plt.scatter(algo.j_a_0_2[0][1], algo.j_a_0_2[0][0], label='action (0, 2)')
+        # plt.scatter(algo.j_a_1_1[0][1], algo.j_a_1_1[0][0], label='action (1, 1)')
+        # plt.legend()
+        # plt.xlabel("number of iterations")
+        # plt.ylabel("similarity value")
+        # plt.title(f"Similarity value when $\delta$ > 0 for agent 1")
+        # plt.show()
+        #
+        # plt.scatter(algo.j_a_0_0[1][1], algo.j_a_0_0[1][0], label='action (0, 0)')
+        # plt.scatter(algo.j_a_1_0[1][1], algo.j_a_1_0[1][0], label='action (0, 1)')
+        # plt.scatter(algo.j_a_2_0[1][1], algo.j_a_2_0[1][0], label='action (2, 0)')
+        # plt.scatter(algo.j_a_1_1[1][1], algo.j_a_1_1[1][0], label='action (1, 1)')
+        # plt.legend()
+        # plt.xlabel("number of iterations")
+        # plt.ylabel("similarity value")
+        # plt.title(f"Similarity value when $\delta$ > 0 for agent 2")
+        # plt.show()
 
 
 if __name__ == "__main__":
@@ -187,7 +226,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--e_decays", type=float,
                         help="give the epsilon decay parameter to use")
     parser.add_argument("-t", "--t_decays", type=float,
-                        help="give the temperature decay parameter to use")
+                        help="give the temperature decay parameter to use", default=0)
     parser.add_argument("--n_runs", type=int, help="number of runs to execute", default=100)
     parser.add_argument("--num_episodes", type=int, help="number of episodes per run", default=15000)
     parser.add_argument("--print_runs", type=bool, help="Print runs or not", default=False)
@@ -204,6 +243,8 @@ if __name__ == "__main__":
                         help="Choose which algorithm to use: ll, lsl, lhl, lhsl, hl, hsl, lsdl", default='ll')
     parser.add_argument("--debug_run", type=int, help="Choose to show a specific run in the plot. The number of runs "
                                                       "has to go until that number", default=None)
-    parser.add_argument("--plotting", type=bool, help="Specify if you want to plot or not", default=False)
+    parser.add_argument("--n_samples", type=int, help="Choose number of samples for the return distribution ",
+                        default=20)
+    parser.add_argument("--interval", type=int, help="Interval for plotting", default=2000)
     args = parser.parse_args()
     main(args)

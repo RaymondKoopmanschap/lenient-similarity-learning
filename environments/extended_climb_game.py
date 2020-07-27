@@ -8,7 +8,7 @@ class ExtendedClimbGame(object):
         self.num_states = 10
         self.num_max_actions = 3
         self.terminal = False
-        self.game_type = game_type  # det, ps, fs
+        self.game_type = game_type  # det, ps, fs, normal
         self.matrix = [[11, -30, 0], [-30, 7, 6], [0, 0, 5]]
         self.state_action_map = {1: (0, 0), 2: (0, 1), 3: (0, 2), 4: (1, 0),
                                  5: (1, 1), 6: (1, 2), 7: (2, 0), 8: (2, 1), 9: (2, 2)}
@@ -28,8 +28,10 @@ class ExtendedClimbGame(object):
             elif self.game_type == 'ps':
                 if (a_1, a_2) == (1, 1):
                     return state, random.choice([14, 0])
-                # if (a_1, a_2) == (2, 2):
-                #     return state, random.choice([16, 0])
+                # if (a_1, a_2) == (0, 2):
+                #     return state, np.random.choice([6, 80], p=[0.95, 0.05])
+                # if (a_1, a_2) == (0, 0):
+                #     return state, random.choice([11, 11])
                 else:
                     return state, self.matrix[a_1][a_2]
             elif self.game_type == 'fs':
@@ -52,7 +54,24 @@ class ExtendedClimbGame(object):
                 if (a_1, a_2) == (2, 2):
                     return state, random.choice([10, 0])
             elif self.game_type == 'normal':
-                return state, np.random.normal(loc=self.matrix[a_1][a_2], scale=5)
+                scale = 5
+                if (a_1, a_2) == (0, 2):
+                    loc = 10
+                    scale = 1
+                # if (a_1, a_2) == (1, 1):
+                #     loc = random.choice([14, 0])
+                #     scale = 10
+                # elif (a_1, a_2) == (0, 1):
+                #     loc = random.choice([2, 4])
+                #     scale = 10
+                # elif (a_1, a_2) == (1, 0):
+                #     loc = random.choice([2, 4])
+                #     scale = 10
+                # elif (a_1, a_2) == (1, 2):
+                #     loc = random.choice([12, 0])
+                else:
+                    loc = self.matrix[a_1][a_2]
+                return state, np.random.normal(loc=loc, scale=scale)
             else:
                 print("invalid type")
             return state

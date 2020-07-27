@@ -22,6 +22,11 @@ def get_lenient_parameters(game, game_type):
             leniency = 10
             min_r = -65
             max_r = 14
+        elif game_type == 'normal':
+            scale = 5
+            leniency = 10
+            min_r = -30 - (scale * 3)
+            max_r = 7 + (scale * 3)
         else:
             print('put valid game type: det, ps or fs')
             min_r, max_r, leniency, omega = None, None, None, None

@@ -6,31 +6,32 @@ from environments.RO3 import R03Game
 from environments.climb_game import ClimbGame
 
 
-def plotting_all(algo, algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
-                 delta_rec, rewards, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, font_size):
+def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
+                 delta_rec, rewards, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                 font_size):
     plt.rcParams.update({'font.size': font_size})  # change to 14 for report
     state = 0
     if 's' in algo_name:
         cols = 4
         plt.subplot(2, cols, 7)
-        sim_metric_plot(sim_metric, iter_avg, n_runs, True)
+        sim_metric_plot(sim_metric, iter_avg, n_runs, num_episodes)
         plt.subplot(2, cols, 8)
         plot_sim_metric_j_a(sim_met_per_j_a, j_a_dict, state, iter_avg, n_runs, num_episodes)
     else:
         cols = 3
     plt.subplot(2, cols, 1)
-    qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes)
+    qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting)
     plt.subplot(2, cols, 2)
     joint_action_plot(joint_actions, j_a_dict, state, iter_avg, n_runs, num_episodes)
     plt.subplot(2, cols, 3)
-    action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, num_episodes)
+    action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting)
     plt.subplot(2, cols, 4)
     plot_delta(delta_rec)
     plt.subplot(2, cols, 5)
     plot_perc_miscoordination(joint_actions, state, iter_avg, n_runs, num_episodes)
     plt.subplot(2, cols, 6)
     avg_reward_plot(rewards, game, iter_avg, n_runs, num_episodes)
-    phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents)
+    # phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents)
     plt.show()
 
 
@@ -96,8 +97,7 @@ def shape_dim_for_plot(iter_avg, n_runs, data, run):
     return avg_data
 
 
-def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg):
-    interval = 2000
+def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval):
     markers_on1 = np.linspace(start=0, stop=(num_episodes/iter_avg)-interval/iter_avg,
                              num=int(num_episodes/interval)).astype(int).tolist()
     step_size = markers_on1[1] - markers_on1[0]
@@ -142,12 +142,12 @@ def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg):
     plt.legend(prop={'size': 10})
 
 
-def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, plot_std=False,
-                run=None):
+def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                plot_std=False, run=None):
     avg_q_values = shape_dim_for_plot(iter_avg, n_runs, q_values, run)
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
     means = avg_q_values.mean(axis=3)
-    plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg)
+    plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval_plotting)
     if plot_std:
         std = avg_q_values.std(axis=3)
         plot_standard_deviation(means, std, x_axis, state, num_agents, num_actions)
@@ -178,11 +178,12 @@ def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs
     plt.ylabel("return")
 
 
-def action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, num_episodes, plot_std=False, run=None):
+def action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                plot_std=False, run=None):
     perc_actions = shape_dim_for_plot(iter_avg, n_runs, action_list, run)
     means = perc_actions.mean(axis=3) * 100  # convert to percentage
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
-    plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg)
+    plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval_plotting)
     if plot_std:
         std = perc_actions.std(axis=3)
         plot_standard_deviation(means, std, x_axis, state, num_agents, num_actions)
