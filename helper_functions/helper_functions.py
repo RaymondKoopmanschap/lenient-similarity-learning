@@ -4,8 +4,8 @@ from environments.climb_game import ClimbGame
 from environments.RO3 import R03Game
 from environments.extended_climb_game import ExtendedClimbGame
 from environments.extended_st_climb_game import ExtendedStochasticClimbGame
-from environments.extended_double_climb_game import ExtendedDoubleClimbGame
-from environments.extended_RO3_climb_game import ExtendedROClimbGame
+# from environments.extended_double_climb_game import ExtendedDoubleClimbGame
+# from environments.extended_RO3_climb_game import ExtendedROClimbGame
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
@@ -43,16 +43,16 @@ def get_lenient_parameters(game, game_type):
         leniency = 10 ** 3
         min_r = -30
         max_r = 14
-    elif isinstance(game, ExtendedDoubleClimbGame):
-        omega = 1
-        leniency = 10 ** 3
-        min_r = -41
-        max_r = 14
-    elif isinstance(game, ExtendedROClimbGame):
-        omega = 1
-        leniency = 10 ** 3
-        min_r = -71
-        max_r = 14
+    # elif isinstance(game, ExtendedDoubleClimbGame):
+    #     omega = 1
+    #     leniency = 10 ** 3
+    #     min_r = -41
+    #     max_r = 14
+    # elif isinstance(game, ExtendedROClimbGame):
+    #     omega = 1
+    #     leniency = 10 ** 3
+    #     min_r = -71
+    #     max_r = 14
     else:
         print('put valid game (Climbgame, ExtendedClimbGame or RO3)')
         min_r, max_r, leniency, omega = None, None, None, None

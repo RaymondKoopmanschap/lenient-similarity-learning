@@ -24,10 +24,10 @@ def main(args):
         game = ExtendedClimbGame(game_type=game_type)
     elif args.game == "ESCB":
         game = ExtendedStochasticClimbGame(bc, cb)
-    elif args.game == "EDCB":
-        game = ExtendedDoubleClimbGame()
-    elif args.game == "ERCB":
-        game = ExtendedROClimbGame()
+    # elif args.game == "EDCB":
+    #     game = ExtendedDoubleClimbGame()
+    # elif args.game == "ERCB":
+    #     game = ExtendedROClimbGame()
     elif args.game == "RO3":
         game = R03Game()
     else:
