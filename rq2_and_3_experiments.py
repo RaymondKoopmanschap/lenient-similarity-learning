@@ -16,12 +16,14 @@ NUM_S_PLOT = 1  # 1 is the only option for now
 
 def main(args):
     game_type = args.game_type
+    bc = args.bc
+    cb = args.cb
     if args.game == "CB":
         game = ClimbGame(game_type=game_type)
     elif args.game == "ECB":
         game = ExtendedClimbGame(game_type=game_type)
     elif args.game == "ESCB":
-        game = ExtendedStochasticClimbGame()
+        game = ExtendedStochasticClimbGame(bc, cb)
     elif args.game == "EDCB":
         game = ExtendedDoubleClimbGame()
     elif args.game == "ERCB":
@@ -271,5 +273,7 @@ if __name__ == "__main__":
                         default=20)
     parser.add_argument("--interval", type=int, help="Interval for plotting", default=2000)
     parser.add_argument("--custom", type=str, help="Add a custom name to folder", default="")
+    parser.add_argument("bc", type=int, help="modify reward for joint-action (b,c) in ECG w transition stochasticity")
+    parser.add_argument("cb", type=int, help="modify reward for joint-action (c,b) in ECG w transition stochasticity")
     args = parser.parse_args()
     main(args)
