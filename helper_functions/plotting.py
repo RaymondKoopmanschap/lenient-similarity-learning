@@ -8,7 +8,7 @@ from environments.climb_game import ClimbGame
 
 def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
                  delta_rec, rewards, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-                 font_size):
+                 beta, font_size):
     plt.rcParams.update({'font.size': font_size})  # change to 14 for report
     state = 0
     if 's' in algo_name:
@@ -20,7 +20,8 @@ def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joi
     else:
         cols = 3
     plt.subplot(2, cols, 1)
-    qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting)
+    qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                algo_name, beta)
     plt.subplot(2, cols, 2)
     joint_action_plot(joint_actions, j_a_dict, state, iter_avg, n_runs, num_episodes)
     plt.subplot(2, cols, 3)
@@ -143,7 +144,7 @@ def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval)
 
 
 def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-                plot_std=False, run=None):
+                algo_name, beta, plot_std=False, run=None):
     avg_q_values = shape_dim_for_plot(iter_avg, n_runs, q_values, run)
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
     means = avg_q_values.mean(axis=3)
@@ -155,21 +156,23 @@ def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs
     margin = 0.05
     offset = 1000
     if isinstance(game, ClimbGame):
-        plt.axhline(y=11, linewidth=linewidth, color='grey')
-        plt.axhline(y=7, linewidth=linewidth, color='grey')
-        plt.text(x=-200, y=11 + margin, s='11')
-        plt.text(x=-200, y=7 + margin, s='7')
-        # plt.axhline(y=-6.33, linewidth=linewidth, color='grey')
-        # plt.axhline(y=-5.67, linewidth=linewidth, color='grey')
-        # plt.axhline(y=1.67, linewidth=linewidth, color='grey')
-        # plt.axhline(y=-7.67, linewidth=linewidth, color='grey')
-        # plt.axhline(y=3.67, linewidth=linewidth, color='grey')
-        # plt.axvline(x=100, linewidth=linewidth, color='grey')
-        # plt.text(x=offset, y=-6.33 + margin, s='-6.33')
-        # plt.text(x=offset, y=-5.67 + margin, s='-5.67')
-        # plt.text(x=offset, y=1.67 + margin, s='1.67')
-        # plt.text(x=offset, y=-7.67 + margin, s='-7.67')
-        # plt.text(x=offset, y=3.67 + margin, s='3.67')
+        if algo_name == 'hl' and beta == 0.1:
+            plt.axhline(y=-6.33, linewidth=linewidth, color='grey')
+            plt.axhline(y=-5.67, linewidth=linewidth, color='grey')
+            plt.axhline(y=1.67, linewidth=linewidth, color='grey')
+            plt.axhline(y=-7.67, linewidth=linewidth, color='grey')
+            plt.axhline(y=3.67, linewidth=linewidth, color='grey')
+            plt.axvline(x=100, linewidth=linewidth, color='grey')
+            plt.text(x=offset, y=-6.33 + margin, s='-6.33')
+            plt.text(x=offset, y=-5.67 + margin, s='-5.67')
+            plt.text(x=offset, y=1.67 + margin, s='1.67')
+            plt.text(x=offset, y=-7.67 + margin, s='-7.67')
+            plt.text(x=offset, y=3.67 + margin, s='3.67')
+        else:
+            plt.axhline(y=11, linewidth=linewidth, color='grey')
+            # plt.axhline(y=7, linewidth=linewidth, color='grey')
+            plt.text(x=-200, y=11 + margin, s='11')
+            # plt.text(x=-200, y=7 + margin, s='7')
 
     elif isinstance(game, R03Game):
         plt.axhline(y=5, linewidth=linewidth, color='grey')

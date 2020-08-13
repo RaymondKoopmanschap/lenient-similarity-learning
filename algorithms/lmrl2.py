@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 import math
+import matplotlib.pyplot as plt
 from algorithms.similarity_metrics import *
 
 
@@ -54,7 +55,10 @@ class LMRL2(object):
         self.j_a_0_2 = [[[], []], [[], []]]
         self.j_a_1_0 = [[[], []], [[], []]]
         self.j_a_1_1 = [[[], []], [[], []]]
+        self.j_a_1_2 = [[[], []], [[], []]]
         self.j_a_2_0 = [[[], []], [[], []]]
+        self.j_a_2_1 = [[[], []], [[], []]]
+        self.j_a_2_2 = [[[], []], [[], []]]
 
     def reset_values(self):
         self.q_values = [[[self.init for _ in range(self.num_a)]
@@ -83,7 +87,7 @@ class LMRL2(object):
             action = self.q_values[pid_id][state].index(max(self.q_values[pid_id][state][0:len(pos_a)]))
         return action
 
-    def next_step(self, a, s, next_s, r, i):
+    def next_step(self, a, s, next_s, r, i, debug_run, run, vis_iters, vis_pids):
         self.epsilon = self.epsilon * self.epsilon_decay  # 0.999
         for pid in range(self.num_pids):
             # Calculating delta
@@ -95,12 +99,15 @@ class LMRL2(object):
 
             # Calculating the similarity metric
             if self.dist:
-                self.calculate_similarity(a, s, next_s, r, pid, delta)
+                self.calculate_similarity(a, s, next_s, r, pid, delta, i, vis_iters, vis_pids, run, debug_run)
             else:
                 self.sim_metric = None
 
-            # if delta <= 0:
-            #     self.collecting_similarity_values_for_plot(pid, a, i)
+            # if a == (0, 0) and i < 10000 and s == 0 and pid == 1 and run == debug_run:
+            #     print(f'{i}, {self.sim_metric}')
+
+            if delta < 0 and s == 0 and run == debug_run:  #  and run == debug_run
+                self.collecting_similarity_values_for_plot(pid, a, i)
 
             """ the code below can indicate seven different algorithms
                 lenient learning:            (ll)   if alpha_sim = alpha      and prob = temp prob
@@ -141,7 +148,7 @@ class LMRL2(object):
 
             # Building up the list
             if self.dist:
-                prob2 = 1
+                # prob2 = self.sim_metric
                 if delta >= 0 or rand < prob:
                     if next_s != 'terminal':
                         ret = r + self.gamma * max(self.q_values[pid][next_s])
@@ -157,7 +164,7 @@ class LMRL2(object):
                         else:
                             self.dist_id[pid][s][a[pid]] = 0
 
-    def calculate_similarity(self, a, s, next_s, r, pid, delta):
+    def calculate_similarity(self, a, s, next_s, r, pid, delta, i, vis_iters, vis_pids, run, debug_run):
         if next_s == 'terminal':
             self.sim_metric = 1  # you can't have miscoordination, because you completed the game
             # print(f'hist: {self.sim_metric}')
@@ -166,6 +173,8 @@ class LMRL2(object):
             dist = self.return_dist[pid][s][a[pid]]  # current distribution
             max_action = self.q_values[pid][next_s].index(max(self.q_values[pid][next_s]))
             next_dist = r + self.gamma * np.asarray(self.return_dist[pid][next_s][max_action])
+
+            # Calculate the similarity metric
             if len(next_dist) == 0:
                 self.sim_metric = 0
             elif self.metric_name == 'dif_hist':
@@ -186,7 +195,14 @@ class LMRL2(object):
             else:
                 print('Choose a valid similarity metric')
                 self.sim_metric = None
-            # if 0 < i < 1500:  # 7000 < i < 9000:
+
+            # Check if I need to visualize
+            if i in vis_iters and run == debug_run:
+                vis_pid = vis_pids[vis_iters.index(i)]
+                if vis_pid == pid:
+                    self.plot_histogram(dist, next_dist, pid, a, i)
+
+            # if 0 < i < 2500:  # 7000 < i < 9000:
             #     print(f'i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
             #           f'Q-value next actions: {self.q_values[pid][next_s]}, Q-value state 0: {self.q_values[pid][0]}, '
             #           f'next state:{next_s}, temp_prob: {1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))}'
@@ -229,6 +245,8 @@ class LMRL2(object):
 
     def collecting_similarity_values_for_plot(self, pid, actions, iteration):
         if actions == (0, 0):
+            # if pid == 1:
+            #     print(iteration)
             self.j_a_0_0[pid][0].append(self.sim_metric)
             self.j_a_0_0[pid][1].append(iteration)
         elif actions == (0, 1):
@@ -243,6 +261,38 @@ class LMRL2(object):
         elif actions == (1, 1):
             self.j_a_1_1[pid][0].append(self.sim_metric)
             self.j_a_1_1[pid][1].append(iteration)
+        elif actions == (1, 2):
+            self.j_a_1_2[pid][0].append(self.sim_metric)
+            self.j_a_1_2[pid][1].append(iteration)
         elif actions == (2, 0):
             self.j_a_2_0[pid][0].append(self.sim_metric)
             self.j_a_2_0[pid][1].append(iteration)
+        elif actions == (2, 1):
+            self.j_a_2_1[pid][0].append(self.sim_metric)
+            self.j_a_2_1[pid][1].append(iteration)
+        elif actions == (2, 2):
+            self.j_a_2_2[pid][0].append(self.sim_metric)
+            self.j_a_2_2[pid][1].append(iteration)
+
+    def plot_histogram(self, cur_dist, next_dist, pid, a, i):
+        action_map = {0: 'A', 1: 'B', 2: 'C'}
+        if pid == 0:
+            action = action_map[a[0]]
+        else:
+            action = action_map[a[1]]
+        actions_map = {(0, 0): '(A, A)', (0, 1): '(A, B)', (0, 2): '(A, C)', (1, 0): '(B, A)', (1, 1): '(B, B)',
+                       (1, 2): '(B, C)', (2, 0): '(C, A)', (2, 1): '(C, B)', (2, 2): '(C, C)'}
+        a_joint = actions_map[a]
+        plt.figure()
+        plt.rcParams.update({'font.size': 13.7})
+        plt.subplots_adjust(left=0.15, bottom=0.11, right=0.9, top=0.87, wspace=0.22, hspace=0.35)
+        plt.hist(cur_dist, bins=self.bins, label=f'current distribution of action {action}', alpha=0.9)
+        plt.hist(next_dist, bins=self.bins, label=f"target distribution after joint-action {a_joint}"
+                 , alpha=0.6)
+        plt.xlabel("Q-value")
+        plt.ylabel("Number of samples")
+
+        plt.title(f"Current and target distribution\n"
+                  f"Iteration {i}, agent {pid+1}, $l$ = {round(self.sim_metric, 2)}")
+        plt.legend()
+

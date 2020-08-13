@@ -123,7 +123,7 @@ def tdl_rq1(cur_samples, next_samples, dist_type, dist_params):
     last_mean = (next_samples[-1] + next_samples[-2]) / 2
     if dist_type == 'normal' or dist_type == 'normal2':  # dist_params [mean_1, std_1]
         tau = norm.cdf(cur_samples, loc=dist_params[0], scale=dist_params[1])
-    elif dist_type == 'uniform' or dist_type == 'uniform2':  # dist_params [start_1, end_1]
+    elif dist_type == 'uniform' or dist_type == 'uniform_wide':  # dist_params [start_1, end_1]
         tau = (cur_samples - dist_params[0]) / (dist_params[1] - dist_params[0])
     elif dist_type == 'multi-modal':  # only works for uniform distributions with shift parameter,
         # dist_params [start_dist1_first, start_dist1_second]

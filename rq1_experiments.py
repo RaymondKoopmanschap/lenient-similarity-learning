@@ -3,7 +3,6 @@ from scipy.stats import uniform
 from tqdm import tqdm
 import time
 from algorithms.similarity_metrics import *
-import os
 
 
 def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type, metric, alpha, count1, count2):
@@ -33,7 +32,7 @@ def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist
 
 def calculate_boundaries(dist_args1, dist_args2, dist_type, shift):
 
-    if dist_type == 'uniform' or dist_type == 'uniform2':
+    if dist_type == 'uniform' or dist_type == 'uniform_wide':
         low_1, high_1 = dist_args1[0], dist_args1[1]
         low_2, high_2 = dist_args2[0], dist_args2[1]
         min_r = min(low_1, low_2)
@@ -62,7 +61,7 @@ def change_dist_args(dist_type):
     # All are in 100, 80, 60, 40, 20, 0 format
     if dist_type == 'uniform':
         dists = [[0, 1, 0, 1], [0, 1, 0.2, 1.2], [0, 1, 0.4, 1.4], [0, 1, 0.6, 1.6], [0, 1, 0.8, 1.8], [0, 1, 1, 2]]
-    elif dist_type == 'uniform2':
+    elif dist_type == 'uniform_wide':
         # dists = [[-0.5, 0.5, -0.5, 0.5], [-0.5, 0.5, -0.625, 0.625], [-0.5, 0.5, -0.833, 0.833],
         #          [-0.5, 0.5, -1.25, 1.25], [-0.5, 0.5, -2.5, 2.5], [-0.5, 0.5, -10, 10]]  # last one is 5% overlap
         dists = [[0, 1, 0, 1], [0, 1, 0.0625, 1.1875], [0, 1, -0.1667, 1.5],
@@ -99,10 +98,13 @@ def similarity_metric_simple_test(cur_samples, next_samples, bins, min_r, max_r)
           f'\ntdl: {tdl_metric}')
 
 
-def overlap_plot(metric, means, stds, sample_sizes, d):
+def overlap_plot(metric, means, stds, sample_sizes, d, bin_exp):
     for count, i in enumerate(sample_sizes):
         plt.xticks(np.arange(d), ['100%', '80%', '60%', '40%', '20%', '0%'])  # Adapt according to dists used
-        plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $n$ = {i}')  # , yerr=stds[count, :]
+        if bin_exp:
+            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $bins$ = {i-1}')  # , yerr=stds[count, :]
+        else:
+            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}')  # , $n$ = {i}'
 
 
 def update_means_stds(metric_list, means, stds, count1, count2, count3, bin_experiments):
@@ -115,6 +117,14 @@ def update_means_stds(metric_list, means, stds, count1, count2, count3, bin_expe
         means[count3, count1] = mean
         stds[count3, count1] = std
     return means, stds
+
+
+def calculate_deviations(metric_means):
+    overlap = [1, 0.8, 0.6, 0.4, 0.2, 0]
+    deviation = metric_means[0] - overlap
+    pos = [round(item, 4) for item in deviation if item >= 0]
+    neg = [round(abs(item), 4) for item in deviation if item < 0]
+    return sum(pos), sum(neg)
 
 
 def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iterations, plot_trend, plot, show_time,
@@ -183,8 +193,8 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
                     # Make histogram
                     for k in range(num_iterations):
                         # Select distribution
-                        if dist_type == 'uniform' or dist_type == 'uniform2':
-                            cur_samples = sorted(np.random.uniform(low=dist1[0], high=dist1[1], size=num_samples + 5))
+                        if dist_type == 'uniform' or dist_type == 'uniform_wide':
+                            cur_samples = sorted(np.random.uniform(low=dist1[0], high=dist1[1], size=num_samples))
                             next_samples = sorted(np.random.uniform(low=dist2[0], high=dist2[1], size=num_samples))
                         elif dist_type == 'normal' or dist_type == 'normal2':
                             cur_samples = sorted(np.random.normal(loc=dist1[0], scale=dist1[1], size=num_samples))
@@ -308,25 +318,44 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
         else:
             iter_over = sample_sizes
 
+        # calculate deviation from overlap
+        emd_pos, emd_neg = calculate_deviations(emd_means)
+        ks_pos, ks_neg = calculate_deviations(ks_means)
+        h_pos, h_neg = calculate_deviations(h_means)
+        js_pos, js_neg = calculate_deviations(js_means)
+        tdl_pos, tdl_neg = calculate_deviations(tdl_means)
+        ovl_pos, ovl_neg = calculate_deviations(ovl_means)
+        print(f'emd pos: {emd_pos}, neg: {emd_neg}\n'
+              f'ks pos: {ks_pos}, neg: {ks_neg}\n'
+              f'h pos: {h_pos}, neg: {h_neg}\n'
+              f'js pos: {js_pos}, neg: {js_neg}\n'
+              f'tdl pos: {tdl_pos}, neg: {tdl_neg}\n'
+              f'ovl pos: {ovl_pos}, neg: {ovl_neg}\n')
+        print([emd_pos, ks_pos, h_pos, js_pos, tdl_pos, ovl_pos])
+        print([emd_neg, ks_neg, h_neg, js_neg, tdl_neg, ovl_neg])
+
         if 'dif_hist' in metrics:
-            overlap_plot('dif hist', hist_means, hist_stds, iter_over, d)
+            overlap_plot('dif hist', hist_means, hist_stds, iter_over, d, bin_experiments)
         if 'emd' in metrics:
-            overlap_plot('emd', emd_means, emd_stds, iter_over, d)
+            overlap_plot('emd', emd_means, emd_stds, iter_over, d, bin_experiments)
         if 'ks' in metrics:
-            overlap_plot('ks', ks_means, ks_stds, iter_over, d)
+            overlap_plot('ks', ks_means, ks_stds, iter_over, d, bin_experiments)
         if 'hellinger' in metrics:
-            overlap_plot('hellinger', h_means, h_stds, iter_over, d)
+            overlap_plot('hellinger', h_means, h_stds, iter_over, d, bin_experiments)
         if 'js' in metrics:
-            overlap_plot('js', js_means, js_stds, iter_over, d)
+            overlap_plot('js', js_means, js_stds, iter_over, d, bin_experiments)
         if 'tdl' in metrics:
-            overlap_plot('tdl', tdl_means, tdl_stds, iter_over, d)
+            overlap_plot('tdl', tdl_means, tdl_stds, iter_over, d, bin_experiments)
         if 'ovl' in metrics:
-            overlap_plot('ovl', ovl_means, ovl_stds, iter_over, d)
+            overlap_plot('ovl', ovl_means, ovl_stds, iter_over, d, bin_experiments)
 
         plt.plot([1, 0.8, 0.6, 0.4, 0.2, 0], label='overlap line')
         plt.xlabel('percentage overlap')
         plt.ylabel('similarity metric value')
-        plt.title(f'Similarity for distributions with different overlap')
+        if bin_experiments:
+            plt.title(f'Similarity for different number of bins')
+        else:
+            plt.title(f'Similarity for distributions with different overlap')
         plt.legend()
         plt.show()
 
@@ -362,11 +391,41 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
 
 ########################################## Adapt parameters section ###################################################
 # 'dif_hist', 'emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl' multiple possible
-metrics1 = ['ks']
-dist_type1 = 'uniform'  # uniform, uniform2, normal, normal2, multi-modal, categorical
+metrics1 = ['ovl', 'emd', 'ks', 'hellinger', 'js', 'tdl']
+dist_type1 = 'multi-modal'  # uniform, uniform_wide, normal, normal2, multi-modal, categorical
 sample_sizes1 = [50]
 num_iterations1 = 1000
 plot_overlap_trend = True
+num_bins = [11]  # for 10 bins use 11. Always + 1
 # similarity_metric_experiments(metrics1, dist_type1, sample_sizes1, num_iterations1, plot_overlap_trend, plot=False,
-#                               show_time=False, num_bins_list=[11], bin_experiments=False)
+#                               show_time=False, num_bins_list=num_bins, bin_experiments=False)
 #######################################################################################################################
+pos_1 = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
+neg_1 = [[2.1430000000000002, 0.5163000000000001, 0.8579000000000001, 0.9486, 0.16419999999999998, 0.5695]]
+pos_2 = [[0.0, 0.0004, 0.020200000000000003, 0.0013, 0.7006, 0.002]]
+neg_2 = [[1.7389999999999999, 0.39909999999999995, 0.335, 0.4825, 0.0449, 0.29269999999999996]]
+pos_3 = [[0.0, 0.6687, 0.1933, 0.12229999999999999, 2.9044, 0.1044]]
+neg_3 = [[2.3994, 0.2028, 0.8255, 0.928, 0.0479, 0.6358]]
+pos_4 = [[0.0, 1.0158, 0.0992, 0.0972, 2.9974, 0.1779]]
+neg_4 = [[2.0952, 0.1955, 0.7477, 0.8556999999999999, 0.3633, 0.5216]]
+
+results_pos = np.concatenate((pos_1, pos_2, pos_3, pos_4))
+results_neg = np.concatenate((neg_1, neg_2, neg_3, neg_4))
+print(results_pos)
+
+plt.rcParams.update({'font.size': 14})
+plt.subplots_adjust(left=0.15, bottom=0.11, right=0.9, top=0.87, wspace=0.22, hspace=0.35)
+
+plt.xticks(np.arange(6), ['shifting\nuniform', 'shifting\nnormal', 'wide\nuniform', 'multi-modal\nuniform'])
+plt.plot(results_pos)
+plt.legend(['emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl'])
+plt.ylabel("Total deviation above the overlap line")
+plt.title("Total positive deviation for each scenario")
+plt.show()
+
+plt.xticks(np.arange(6), ['shifting\nuniform', 'shifting\nnormal', 'wide\nuniform', 'multi-modal\nuniform'])
+plt.plot(results_neg)
+plt.legend(['emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl'])
+plt.ylabel("Total deviation below the overlap line")
+plt.title("Total negative deviation for each scenario")
+plt.show()
