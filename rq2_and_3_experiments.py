@@ -1,12 +1,9 @@
-from __future__ import absolute_import
-from __future__ import division
-
 import random
 from tqdm import tqdm
 from argparse import ArgumentParser
 
 # Import algorithms
-from algorithms.lmrl2 import LMRL2
+from algorithms.MARL_algorithms import MARLAlgorithms
 from helper_functions.plotting import *
 from helper_functions.helper_functions import *
 
@@ -24,14 +21,10 @@ def main(args):
         game = ExtendedClimbGame(game_type=game_type)
     elif args.game == "ESCB":
         game = ExtendedStochasticClimbGame(bc, cb)
-    # elif args.game == "EDCB":
-    #     game = ExtendedDoubleClimbGame()
-    # elif args.game == "ERCB":
-    #     game = ExtendedROClimbGame()
     elif args.game == "RO3":
         game = R03Game()
     else:
-        print("Choose a valid game: CB, ECB or RO3")
+        print("Choose a valid game: CB, ECB, ESCB or RO3")
         game = None
 
     num_states = game.get_num_states()
@@ -47,8 +40,6 @@ def main(args):
     interval_plotting = args.interval
     custom = args.custom
     vis_iters = [489]
-    # 128, 185, 240, 279, 377, 418, 522, 637, 751, 907, 990, 1113, 1476, 2130, 2740, 4546, 4873, 4990, 5077,
-    #                  5582, 5810, 6135, 6268, 6762, 7153, 7307, 7999, 8107, 8493
     vis_pids = [1] * len(vis_iters)
 
     # Parameters for the algorithm
@@ -125,8 +116,8 @@ def main(args):
             j_a_dict = {(0, 0): 0, (0, 1): 1, (0, 2): 2, (1, 0): 3, (1, 1): 4,
                         (1, 2): 5, (2, 0): 6, (2, 1): 7, (2, 2): 8}
 
-            algo = LMRL2(num_states, beta, leniency, e_decay, t_decay, min_r, max_r, game,
-                         algo_name, n_samples, metric=metric, init=min_r)
+            algo = MARLAlgorithms(num_states, beta, leniency, e_decay, t_decay, min_r, max_r, game,
+                                  algo_name, n_samples, metric=metric, init=min_r)
             # Training
             for run in tqdm(range(n_runs)):
                 algo.reset_values()
@@ -164,9 +155,7 @@ def main(args):
                         if np.argmax(algo.q_values[0][1]) == np.argmax(algo.q_values[1][1]):
                             correct_policies += 1
                     elif isinstance(game, ClimbGame) or isinstance(game, ExtendedClimbGame) \
-                            or isinstance(game, ExtendedStochasticClimbGame) \
-                            or isinstance(game, ExtendedDoubleClimbGame)\
-                            or isinstance(game, ExtendedROClimbGame):
+                            or isinstance(game, ExtendedStochasticClimbGame):
                         correct_policies += 1
                         sample_efficiencies.append(num_episodes - sample_counter)
                 elif print_runs:  # print if policy is not correct
@@ -196,18 +185,18 @@ def main(args):
     if plotting:
         # Plotting for report (use the size that is directly given, do not rescale plot)
         plt.rcParams.update({'font.size': 14})
-        plt.figure()
-        qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-                    algo_name, beta, run=debug_run)
-        plt.ylim(bottom=-10)  # , top=18
-        # plt.xlim(left=200)
-        plt.subplots_adjust(left=0.12, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
-        plt.show()
-        plt.figure()
-        action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-        run=debug_run)
-        plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
-        plt.show()
+        # plt.figure()
+        # qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+        #             algo_name, beta, run=debug_run)
+        # plt.ylim(bottom=-5)  # , top=18
+        # # plt.xlim(left=200)
+        # plt.subplots_adjust(left=0.12, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
+        # plt.show()
+        # plt.figure()
+        # action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+        # run=debug_run)
+        # plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
+        # plt.show()
 
         # phase_plot(action_list, 0, iter_avg, n_runs, num_episodes, NUM_AGENTS)
         # plt.show()
@@ -216,19 +205,20 @@ def main(args):
         #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
         #              interval_plotting, beta, font_size=9)
 
-        # plt.figure()
-        # # plt.scatter(algo.j_a_0_0[0][1], algo.j_a_0_0[0][0], label='action (A, A)')
-        # plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='current: A, target: (A, B)')
-        # plt.scatter(algo.j_a_0_2[0][1], algo.j_a_0_2[0][0], label='current: A, target: (A, C)')
-        # plt.scatter(algo.j_a_1_1[0][1], algo.j_a_1_1[0][0], label='current: B, target: (B, B)')
-        # plt.scatter(algo.j_a_1_2[0][1], algo.j_a_1_2[0][0], label='current: B, target: (B, C)')
-        # plt.legend()
-        # plt.xlabel("number of iterations")
-        # plt.ylabel("similarity value")
+        plt.figure()
+        # plt.scatter(algo.j_a_0_0[0][1], algo.j_a_0_0[0][0], label='action (A, A)')
+        # plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='current: A, target: (A, B) ($s_2$)')
+        # plt.scatter(algo.j_a_0_2[0][1], algo.j_a_0_2[0][0], label='current: A, target: (A, C) ($s_3$)')
+        # plt.scatter(algo.j_a_1_0[0][1], algo.j_a_1_0[0][0], label='current: B, target: (B, A) ($s_4$)')
+        plt.scatter(algo.j_a_1_1[0][1], algo.j_a_1_1[0][0], label='current: B, target: (B, B) ($s_{5.1}$)')
+        # plt.scatter(algo.j_a_1_2[0][1], algo.j_a_1_2[0][0], label='current: B, target: (B, C) ($s_6$)')
+        plt.legend()
+        plt.xlabel("number of iterations")
+        plt.ylabel("similarity value")
         # plt.xlim(right=10000)
-        # plt.title(f"Similarity value when $\delta$ < 0 for agent 1")
-        # #plt.show()
-        #
+        plt.title(f"Similarity value when $\delta$ < 0 for agent 1")
+        plt.show()
+
         # plt.figure()
         # # plt.scatter(algo.j_a_0_0[1][1], algo.j_a_0_0[1][0], label='action (A, A)')
         # plt.scatter(algo.j_a_1_0[1][1], algo.j_a_1_0[1][0], label='current: A, target: (B, A)')
@@ -273,7 +263,9 @@ if __name__ == "__main__":
                         default=20)
     parser.add_argument("--interval", type=int, help="Interval for plotting", default=2000)
     parser.add_argument("--custom", type=str, help="Add a custom name to folder", default="")
-    parser.add_argument("--bc", type=int, help="modify reward for joint-action (b,c) in ECG w transition stochasticity")
-    parser.add_argument("--cb", type=int, help="modify reward for joint-action (c,b) in ECG w transition stochasticity")
+    parser.add_argument("--bc", type=int, help="modify reward for joint-action (b,c) in ECG w transition stochasticity",
+                        default=6)
+    parser.add_argument("--cb", type=int, help="modify reward for joint-action (c,b) in ECG w transition stochasticity",
+                        default=0)
     args = parser.parse_args()
     main(args)

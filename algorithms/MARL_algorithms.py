@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from algorithms.similarity_metrics import *
 
 
-class LMRL2(object):
+class MARLAlgorithms(object):
 
     def __init__(self, states, beta, leniency, e_decay, t_decay,
                  min_r, max_r, game, algo_name, n_samples, metric='dif_hist', init=0):

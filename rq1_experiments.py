@@ -3,6 +3,7 @@ from scipy.stats import uniform
 from tqdm import tqdm
 import time
 from algorithms.similarity_metrics import *
+from argparse import ArgumentParser
 
 
 def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type, metric, alpha, count1, count2):
@@ -31,7 +32,6 @@ def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist
 
 
 def calculate_boundaries(dist_args1, dist_args2, dist_type, shift):
-
     if dist_type == 'uniform' or dist_type == 'uniform_wide':
         low_1, high_1 = dist_args1[0], dist_args1[1]
         low_2, high_2 = dist_args2[0], dist_args2[1]
@@ -65,7 +65,7 @@ def change_dist_args(dist_type):
         # dists = [[-0.5, 0.5, -0.5, 0.5], [-0.5, 0.5, -0.625, 0.625], [-0.5, 0.5, -0.833, 0.833],
         #          [-0.5, 0.5, -1.25, 1.25], [-0.5, 0.5, -2.5, 2.5], [-0.5, 0.5, -10, 10]]  # last one is 5% overlap
         dists = [[0, 1, 0, 1], [0, 1, 0.0625, 1.1875], [0, 1, -0.1667, 1.5],
-                 [0, 1, -0.375, 2.125], [0, 1, -1, 4],  [0, 1, -4.25, 15.75]]
+                 [0, 1, -0.375, 2.125], [0, 1, -1, 4], [0, 1, -4.25, 15.75]]
     elif dist_type == 'normal':
         dists = [[0, 1, 0, 1], [0, 1, 0.5, 1], [0, 1, 1.05, 1], [0, 1, 1.68, 1], [0, 1, 2.56, 1], [0, 1, 6, 1]]
     elif dist_type == 'normal2':
@@ -102,7 +102,7 @@ def overlap_plot(metric, means, stds, sample_sizes, d, bin_exp):
     for count, i in enumerate(sample_sizes):
         plt.xticks(np.arange(d), ['100%', '80%', '60%', '40%', '20%', '0%'])  # Adapt according to dists used
         if bin_exp:
-            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $bins$ = {i-1}')  # , yerr=stds[count, :]
+            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $bins$ = {i - 1}')  # , yerr=stds[count, :]
         else:
             plt.errorbar(np.arange(d), means[count, :], label=f'{metric}')  # , $n$ = {i}'
 
@@ -143,10 +143,10 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
     else:
         s = len(sample_sizes)
     hist_means, emd_means, ks_means, h_means, js_means, tdl_means, ovl_means, hist_stds, emd_stds, ks_stds, h_stds, \
-        js_stds, tdl_stds, ovl_stds = np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
-                                      np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
-                                      np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
-                                      np.zeros((s, d)), np.zeros((s, d))
+    js_stds, tdl_stds, ovl_stds = np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
+                                  np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
+                                  np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), np.zeros((s, d)), \
+                                  np.zeros((s, d)), np.zeros((s, d))
 
     # Initialize subplots
     if plot:
@@ -242,7 +242,8 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
                             js_list.append(js_metric)
                         if 'tdl' in metrics:
                             start_tdl = time.time()
-                            tdl_metric = tdl_rq1(cur_samples, next_samples, dist_type, dist1)  # dist1 correct for uniform
+                            tdl_metric = tdl_rq1(cur_samples, next_samples, dist_type,
+                                                 dist1)  # dist1 correct for uniform
                             tot_tdl_time = tot_tdl_time + (time.time() - start_tdl)
                             tdl_list.append(tdl_metric)
                         if 'ovl' in metrics:
@@ -254,7 +255,8 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
                     # histogram plotting
                     if plot:
                         if 'dif_hist' in metrics:
-                            plotting(axs_hist, dif_hist_list, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type,
+                            plotting(axs_hist, dif_hist_list, dist1, dist2, dist_args, sample_sizes, num_samples,
+                                     dist_type,
                                      'dif hist', 1, count1, count2)
                         if 'emd' in metrics:
                             plotting(axs_emd, emd_list, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type,
@@ -263,7 +265,8 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
                             plotting(axs_ks, ks_list, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type,
                                      'ks', 1, count1, count2)
                         if 'hellinger' in metrics:
-                            plotting(axs_h, hellinger_list, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type,
+                            plotting(axs_h, hellinger_list, dist1, dist2, dist_args, sample_sizes, num_samples,
+                                     dist_type,
                                      'hellinger', 1, count1, count2)
                         if 'js' in metrics:
                             plotting(axs_js, js_list, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type,
@@ -310,7 +313,7 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
         tot_tdl_time_list.append(tot_tdl_time)
         tot_ovl_time_list.append(tot_ovl_time)
 
-    if plot_overlap_trend:
+    if plot_trend:
         plt.rcParams.update({'font.size': 14})
         plt.figure()
         if bin_experiments:
@@ -325,14 +328,15 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
         js_pos, js_neg = calculate_deviations(js_means)
         tdl_pos, tdl_neg = calculate_deviations(tdl_means)
         ovl_pos, ovl_neg = calculate_deviations(ovl_means)
-        print(f'emd pos: {emd_pos}, neg: {emd_neg}\n'
+        print(f'Absolute deviations for each similarity metric:\n'
+              f'emd pos: {emd_pos}, neg: {emd_neg}\n'
               f'ks pos: {ks_pos}, neg: {ks_neg}\n'
               f'h pos: {h_pos}, neg: {h_neg}\n'
               f'js pos: {js_pos}, neg: {js_neg}\n'
               f'tdl pos: {tdl_pos}, neg: {tdl_neg}\n'
               f'ovl pos: {ovl_pos}, neg: {ovl_neg}\n')
-        print([emd_pos, ks_pos, h_pos, js_pos, tdl_pos, ovl_pos])
-        print([emd_neg, ks_neg, h_neg, js_neg, tdl_neg, ovl_neg])
+        # print([emd_pos, ks_pos, h_pos, js_pos, tdl_pos, ovl_pos])
+        # print([emd_neg, ks_neg, h_neg, js_neg, tdl_neg, ovl_neg])
 
         if 'dif_hist' in metrics:
             overlap_plot('dif hist', hist_means, hist_stds, iter_over, d, bin_experiments)
@@ -349,9 +353,9 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
         if 'ovl' in metrics:
             overlap_plot('ovl', ovl_means, ovl_stds, iter_over, d, bin_experiments)
 
-        plt.plot([1, 0.8, 0.6, 0.4, 0.2, 0], label='overlap line')
+        plt.plot([1, 0.8, 0.6, 0.4, 0.2, 0], label='true overlap')
         plt.xlabel('percentage overlap')
-        plt.ylabel('similarity metric value')
+        plt.ylabel('similarity value')
         if bin_experiments:
             plt.title(f'Similarity for different number of bins')
         else:
@@ -389,43 +393,57 @@ def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iteratio
         plt.show()
 
 
-########################################## Adapt parameters section ###################################################
-# 'dif_hist', 'emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl' multiple possible
-metrics1 = ['ovl', 'emd', 'ks', 'hellinger', 'js', 'tdl']
-dist_type1 = 'multi-modal'  # uniform, uniform_wide, normal, normal2, multi-modal, categorical
-sample_sizes1 = [50]
-num_iterations1 = 1000
-plot_overlap_trend = True
-num_bins = [11]  # for 10 bins use 11. Always + 1
-# similarity_metric_experiments(metrics1, dist_type1, sample_sizes1, num_iterations1, plot_overlap_trend, plot=False,
-#                               show_time=False, num_bins_list=num_bins, bin_experiments=False)
-#######################################################################################################################
-pos_1 = [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-neg_1 = [[2.1430000000000002, 0.5163000000000001, 0.8579000000000001, 0.9486, 0.16419999999999998, 0.5695]]
-pos_2 = [[0.0, 0.0004, 0.020200000000000003, 0.0013, 0.7006, 0.002]]
-neg_2 = [[1.7389999999999999, 0.39909999999999995, 0.335, 0.4825, 0.0449, 0.29269999999999996]]
-pos_3 = [[0.0, 0.6687, 0.1933, 0.12229999999999999, 2.9044, 0.1044]]
-neg_3 = [[2.3994, 0.2028, 0.8255, 0.928, 0.0479, 0.6358]]
-pos_4 = [[0.0, 1.0158, 0.0992, 0.0972, 2.9974, 0.1779]]
-neg_4 = [[2.0952, 0.1955, 0.7477, 0.8556999999999999, 0.3633, 0.5216]]
+def main(args):
+    # 'dif_hist', 'emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl' multiple possible
+    metric_dict = {'o': 'ovl', 'e': 'emd', 'k': 'ks', 'h': 'hellinger', 'j': 'js', 't': 'tdl'}
+    metrics1 = []
+    for metric in args.metrics:
+        if metric not in metric_dict:
+            print("Please choose a valid metric: o, e, k, h, j or t and write them next to each other.\n"
+                  "Example: --metrics: k h j\nNon-valid metrics will be ignored")
+        else:
+            metrics1.append(metric_dict[metric])
+    dist_type1 = args.dist_type  # uniform, uniform_wide, normal, normal2, multi-modal, categorical
+    sample_sizes = args.sample_sizes
+    if isinstance(sample_sizes, int):
+        sample_sizes = [sample_sizes]
+    num_bins = args.num_bins
+    if isinstance(num_bins, int):
+        num_bins = [num_bins]
+    print(f'Overview of the chosen settings\n'
+          f'Metrics: {metrics1}\n'
+          f'Distribution type: {args.dist_type}\n'
+          f'Sample sizes: {args.sample_sizes}\n'
+          f'Number of bins: {args.num_bins}\n')
+    for count, i in enumerate(num_bins):
+        num_bins[count] = i + 1
 
-results_pos = np.concatenate((pos_1, pos_2, pos_3, pos_4))
-results_neg = np.concatenate((neg_1, neg_2, neg_3, neg_4))
-print(results_pos)
+    similarity_metric_experiments(metrics1, dist_type1, sample_sizes, args.num_iterations, args.plot_overlap_trend,
+                                  plot=args.plot_histograms, show_time=args.show_time, num_bins_list=num_bins,
+                                  bin_experiments=args.bin_experiments)
 
-plt.rcParams.update({'font.size': 14})
-plt.subplots_adjust(left=0.15, bottom=0.11, right=0.9, top=0.87, wspace=0.22, hspace=0.35)
 
-plt.xticks(np.arange(6), ['shifting\nuniform', 'shifting\nnormal', 'wide\nuniform', 'multi-modal\nuniform'])
-plt.plot(results_pos)
-plt.legend(['emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl'])
-plt.ylabel("Total deviation above the overlap line")
-plt.title("Total positive deviation for each scenario")
-plt.show()
-
-plt.xticks(np.arange(6), ['shifting\nuniform', 'shifting\nnormal', 'wide\nuniform', 'multi-modal\nuniform'])
-plt.plot(results_neg)
-plt.legend(['emd', 'ks', 'hellinger', 'js', 'tdl', 'ovl'])
-plt.ylabel("Total deviation below the overlap line")
-plt.title("Total negative deviation for each scenario")
-plt.show()
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-m", "--metrics", type=str, nargs='+', default='o', help='Provide the first letter of the '
+                                                                                  'metric and put them behind each '
+                                                                                  'other with spaces. Possible letters '
+                                                                                  'are: o, e, k, h, j or t')
+    parser.add_argument("-d", "--dist_type", type=str, default='uniform', help="Select the distribution type, possible "
+                                                                               "options are: uniform, uniform wide, "
+                                                                               "normal, normal2, multi-modal, "
+                                                                               "categorical")
+    parser.add_argument("-s", "--sample_sizes", type=int, nargs='+', default=50, help="Specify sample sizes, can be "
+                                                                                      "one or multiple, e.g.: 50 100")
+    parser.add_argument("-i", "--num_iterations", type=int, default=1000, help="Specify number of iterations")
+    parser.add_argument("-b", "--num_bins", type=int, nargs='+', default=10, help="Speciy number of bins, can be one or"
+                                                                                  " multiple")
+    parser.add_argument("--plot_histograms", type=bool, default=False, help='Plot histograms, this is not used in the '
+                                                                            'thesis')
+    parser.add_argument("--show_time", type=bool, default=False, help='Show execution time + standard deviation')
+    parser.add_argument("--plot_overlap_trend", type=bool, default=True, help="Show overlap trend")
+    parser.add_argument("--bin_experiments", type=bool, default=False, help="If you specified multiple bins, then you "
+                                                                            "can here indicate to show the results "
+                                                                            "of these")
+    args = parser.parse_args()
+    main(args)
