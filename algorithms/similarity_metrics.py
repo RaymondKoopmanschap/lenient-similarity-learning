@@ -18,7 +18,6 @@ def dif_hist(cur_samples, next_samples, bins):
 
 
 def emd(cur_samples, next_samples, bins=None):
-    # emd = sum([abs(cur_samples[x] - next_samples[x]) for x in range(length)]) / length
     if bins is not None:
         cur_hist, _ = np.histogram(cur_samples, bins)
         next_hist, _ = np.histogram(next_samples, bins)
@@ -89,7 +88,7 @@ def tdl_for_plot(base_samples, target_samples, tau, type='sum'):
         means.append(mean_1)
         F_a, F_b = find_quantile(base_samples, [mean_1, mean_2], tau)
         if type == 'sum':
-            tdl = tdl + (F_b - F_a)  # F(b) - F(a) is the solution of equation 11. Equation 12 is then summing those.
+            tdl = tdl + (F_b - F_a)
         elif type == 'product':
             tdl = tdl * (F_b - F_a)
         elif type == 'log':
@@ -126,7 +125,6 @@ def tdl_rq1(cur_samples, next_samples, dist_type, dist_params):
     elif dist_type == 'uniform' or dist_type == 'uniform_wide':  # dist_params [start_1, end_1]
         tau = (cur_samples - dist_params[0]) / (dist_params[1] - dist_params[0])
     elif dist_type == 'multi-modal':  # only works for uniform distributions with shift parameter,
-        # dist_params [start_dist1_first, start_dist1_second]
         tau = []
         for sample in cur_samples:
             if sample > dist_params[1]:  # dist_param is the begin position of the second uniform distribution

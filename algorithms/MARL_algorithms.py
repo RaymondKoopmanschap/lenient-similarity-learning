@@ -16,12 +16,12 @@ class MARLAlgorithms(object):
         self.gamma = 1
         self.delta_rec = None
         self.epsilon = None
-        self.epsilon_decay = e_decay  # (Important parameter) (with 0.9995 and 0.9999 get later the problem)
+        self.epsilon_decay = e_decay
         self.min_r = int(min_r)
         self.max_r = int(max_r)
         self.q_values = None
         self.game = game
-        self.init = init  # 0 or min_r
+        self.init = init
         self.algo = algo_name
 
         # Leniency parameters
@@ -60,7 +60,6 @@ class MARLAlgorithms(object):
     def reset_values(self):
         self.q_values = [[[self.init for _ in range(self.num_a)]
                           for _ in range(self.num_states)] for _ in range(self.num_pids)]
-        # maybe change back to 1 if folding doesn't work for self.num_states
         self.t_values = [[[self.MaxTemp for _ in range(self.num_a)]
                           for _ in range(self.num_states)] for _ in range(self.num_pids)]
 
@@ -85,7 +84,7 @@ class MARLAlgorithms(object):
         return action
 
     def next_step(self, a, s, next_s, r, i, debug_run, run, vis_iters, vis_pids):
-        self.epsilon = self.epsilon * self.epsilon_decay  # 0.999
+        self.epsilon = self.epsilon * self.epsilon_decay
         for pid in range(self.num_pids):
             # Calculating delta
             if next_s == 'terminal' or max(self.q_values[pid][next_s]) == math.inf:
@@ -127,7 +126,7 @@ class MARLAlgorithms(object):
             else:
                 pass
             # Temperature update
-            if next_s != 'terminal':  # Only updating the temperature value of the first state
+            if next_s != 'terminal':
                 self.t_values[pid][s][a[pid]] = self.t_decay * ((1 - self.temp_diffusion)*self.t_values[pid][s][a[pid]]
                                               + self.temp_diffusion*np.mean(self.t_values[pid][next_s][0:1]))
                 # THIS [0:1] IS ONLY FOR THE EXTENDED CLIMB GAME AS AN EASY FIX !
@@ -136,7 +135,6 @@ class MARLAlgorithms(object):
 
             # Building up the list
             if self.dist:
-                # prob2 = self.sim_metric
                 if delta >= 0 or rand < prob:
                     if next_s != 'terminal':
                         ret = r + self.gamma * max(self.q_values[pid][next_s])
@@ -155,7 +153,6 @@ class MARLAlgorithms(object):
     def calculate_similarity(self, a, s, next_s, r, pid, delta, i, vis_iters, vis_pids, run, debug_run):
         if next_s == 'terminal':
             self.sim_metric = 1  # you can't have miscoordination, because you completed the game
-            # print(f'hist: {self.sim_metric}')
         elif len(self.return_dist[pid][s][a[pid]]) == self.n_samples and delta < 0:
             # delta < 0 because only needed when doing negative updates and calculate only when complete dist
             dist = self.return_dist[pid][s][a[pid]]  # current distribution
@@ -218,8 +215,6 @@ class MARLAlgorithms(object):
 
     def collecting_similarity_values_for_plot(self, pid, actions, iteration):
         if actions == (0, 0):
-            # if pid == 1:
-            #     print(iteration)
             self.j_a_0_0[pid][0].append(self.sim_metric)
             self.j_a_0_0[pid][1].append(iteration)
         elif actions == (0, 1):

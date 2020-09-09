@@ -28,19 +28,6 @@ class ExtendedClimbGame(object):
             elif self.game_type == 'ps':
                 if (a_1, a_2) == (1, 1):
                     return state, random.choice([14, 0])
-                # if (a_1, a_2) == (0, 2):
-                #     return state, np.random.choice([6, 80], p=[0.95, 0.05])
-                # if (a_1, a_2) == (0, 0):
-                #     return state, random.choice([11, 11])
-                else:
-                    return state, self.matrix[a_1][a_2]
-            elif self.game_type == 'ps2':
-                if (a_1, a_2) == (1, 1):
-                    return state, random.choice([14, 0])
-                if (a_1, a_2) == (2, 2):
-                    return state, np.random.choice([16, 0])
-                # if (a_1, a_2) == (0, 0):
-                #     return state, random.choice([11, 11])
                 else:
                     return state, self.matrix[a_1][a_2]
             elif self.game_type == 'fs':
@@ -62,25 +49,6 @@ class ExtendedClimbGame(object):
                     return state, random.choice([5, -5])
                 if (a_1, a_2) == (2, 2):
                     return state, random.choice([10, 0])
-            elif self.game_type == 'normal':
-                scale = 5
-                if (a_1, a_2) == (0, 2):
-                    loc = 10
-                    scale = 1
-                # if (a_1, a_2) == (1, 1):
-                #     loc = random.choice([14, 0])
-                #     scale = 10
-                # elif (a_1, a_2) == (0, 1):
-                #     loc = random.choice([2, 4])
-                #     scale = 10
-                # elif (a_1, a_2) == (1, 0):
-                #     loc = random.choice([2, 4])
-                #     scale = 10
-                # elif (a_1, a_2) == (1, 2):
-                #     loc = random.choice([12, 0])
-                else:
-                    loc = self.matrix[a_1][a_2]
-                return state, np.random.normal(loc=loc, scale=scale)
             else:
                 print("invalid type")
             return state

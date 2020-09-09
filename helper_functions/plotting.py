@@ -34,7 +34,7 @@ def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joi
     plot_perc_miscoordination(joint_actions, state, iter_avg, n_runs, num_episodes)
     plt.subplot(2, cols, 6)
     avg_reward_plot(rewards, game, iter_avg, n_runs, num_episodes)
-    # phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents)
+    phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents)
     plt.show()
 
 
@@ -337,7 +337,6 @@ def kolmogorov_smirnov_plot():
 
 
 def multi_modal_plot_for_tdl():
-    # Multi-modal stuff
     mu_1 = 0
     mu_2 = 10
     mu_3 = 5
@@ -355,5 +354,3 @@ def multi_modal_plot_for_tdl():
     plt.ylabel('probability')
     plt.legend()
     plt.show()
-
-

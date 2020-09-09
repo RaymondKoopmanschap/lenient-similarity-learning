@@ -42,7 +42,10 @@ def main(args):
     vis_iters = args.vis_iters
     if isinstance(vis_iters, int):
         vis_iters = [vis_iters]
-    vis_pids = [args.agent] * len(vis_iters)
+    if isinstance(vis_iters, list):
+        vis_pids = [args.agent] * len(vis_iters)
+    else:
+        vis_pids = []
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
@@ -50,38 +53,18 @@ def main(args):
     n_samples = args.n_samples  # default 20
     e_decays = [args.e_decay]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
     t_decays = [args.t_decay]
-    # Lenient learning
-    if args.grid_search == 'det_ll':
-        e_decays = [0.9993, 0.9994, 0.9995, 0.9996]
-        t_decays = [0.997, 0.998, 0.999, 0.9995]
-    elif args.grid_search == 'ps_and_fs_ll':
-        e_decays = [0.9991, 0.9992, 0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925, 0.995, 0.996, 0.997, 0.9975, 0.998, 0.9985,
-                    0.999]
-    # Lenient similarity learning
-    elif args.grid_search == 'det_sim':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998]
-        t_decays = [0.95, 0.97, 0.98, 0.99, 0.995, 0.997, 0.998]
-    elif args.grid_search == 'ps_lhsl_beta0':
-        e_decays = [0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.94, 0.95, 0.96, 0.97, 0.975, 0.98, 0.985, 0.99, 0.9925]
-    elif args.grid_search == 'ps_lhsl_beta001':
-        e_decays = [0.9993, 0.9994, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998]
-        t_decays = [0.94, 0.95, 0.96, 0.97, 0.975, 0.98, 0.985]
-    elif args.grid_search == 'ps_lsdl':
-        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985, 0.9999]
-        t_decays = [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.975]
-    elif args.grid_search == 'fs_sim':
-        e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985]
-        t_decays = [0.75, 0.8, 0.85, 0.9, 0.95]
-    elif args.grid_search == 'normal':
+    if args.grid_search == 'normal':
         e_decays = [0.9991, 0.9993, 0.9995,  0.9997, 0.9998, 0.9999]
         t_decays = [0.9, 0.92, 0.94, 0.96, 0.97, 0.98, 0.99, 0.995, 0.9975, 0.9985, 0.999, 0.9995]
     elif args.grid_search == 'lsl':
         e_decays = [0.9991, 0.9993, 0.9995, 0.9997, 0.9998, 0.9999]
         t_decays = [0]
 
-    algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl (only with similarity algorithms the metric is used)
+    algo_name = args.algo_name  # ll, lsl, lhl, lhsl, hl, hsl, lsdl
+    if algo_name in ['ll', 'lhl', 'lhsl', 'lsdl'] and t_decays == [0]:
+        print(f"Provide a temperature decay for algorithm: {algo_name}")
+        exit()
+
     debug_run = args.debug_run
     if len(e_decays) == 1:
         plotting = True
@@ -147,10 +130,6 @@ def main(args):
                     else:
                         sample_counter = 0
 
-                    # test_state.append(algo.q_values[0][5][0])
-                    # if i % 10 == 0:
-                    #     print(algo.q_values[0][5])
-
                 # Calculate correct policies
                 if np.argmax(algo.q_values[0][0]) == 0 and np.argmax(algo.q_values[1][0]) == 0:
                     if isinstance(game, R03Game):
@@ -185,24 +164,19 @@ def main(args):
                          custom)
 
     if plotting:
-        # Plotting for thesis (use the size that is directly given, do not rescale plot)
+        # Plotting for thesis
         plt.rcParams.update({'font.size': 14})
         plt.figure()
         qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
                     algo_name, beta, run=debug_run)
-        plt.ylim(bottom=args.ylim)  # , top=18
-        # plt.xlim(left=200)
+        plt.ylim(bottom=args.ylim)
         plt.subplots_adjust(left=0.12, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
         plt.show()
         plt.figure()
         action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-        run=debug_run)
+                    run=debug_run)
         plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
         plt.show()
-
-        # plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
-        #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
-        #              interval_plotting, beta, font_size=9)
 
     if args.plot_sim_value:
         plt.figure()
@@ -213,7 +187,6 @@ def main(args):
         plt.legend()
         plt.xlabel("number of iterations")
         plt.ylabel("similarity value")
-        # plt.xlim(right=10000)
         plt.title(f"Similarity value when $\delta$ < 0 for agent 1")
         plt.show()
 
@@ -225,9 +198,13 @@ def main(args):
         plt.legend()
         plt.xlabel("number of iterations")
         plt.ylabel("similarity value")
-        plt.xlim(right=10000)
         plt.title(f"Similarity value when $\delta$ < 0 for agent 2")
         plt.show()
+
+    if args.plotting_all:
+          plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
+                       delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
+                       interval_plotting, beta, font_size=9)
 
 
 if __name__ == "__main__":
@@ -267,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--plot_sim_value", type=bool, help="Plot the similarity value plots", default=False)
     parser.add_argument("--agent", type=int, help="Agent number, 0 or 1")
     parser.add_argument("--vis_iters", type=int, nargs='+', help="The iteration number for the current and target "
-                                                               "distribution to visualize")
+                                                                 "distribution to visualize")
+    parser.add_argument("--plotting_all", type=bool, help="Plotting all statistics")
     args = parser.parse_args()
     main(args)
