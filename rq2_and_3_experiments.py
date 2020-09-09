@@ -39,15 +39,17 @@ def main(args):
     num_episodes = args.num_episodes
     interval_plotting = args.interval
     custom = args.custom
-    vis_iters = [489]
-    vis_pids = [1] * len(vis_iters)
+    vis_iters = args.vis_iters
+    if isinstance(vis_iters, int):
+        vis_iters = [vis_iters]
+    vis_pids = [args.agent] * len(vis_iters)
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
     metric = args.sim_metric  # ovl, ks, hellinger, jsd, emd, tdl
     n_samples = args.n_samples  # default 20
-    e_decays = [args.e_decays]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
-    t_decays = [args.t_decays]
+    e_decays = [args.e_decay]  # if 0.9998 it gets 0.018 in 10.000 runs and 0.135 in 5.000 runs
+    t_decays = [args.t_decay]
     # Lenient learning
     if args.grid_search == 'det_ll':
         e_decays = [0.9993, 0.9994, 0.9995, 0.9996]
@@ -72,7 +74,7 @@ def main(args):
     elif args.grid_search == 'fs_sim':
         e_decays = [0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.9995, 0.9996, 0.9997, 0.99975, 0.9998, 0.99985]
         t_decays = [0.75, 0.8, 0.85, 0.9, 0.95]
-    elif args.grid_search == 'normal':  # 72
+    elif args.grid_search == 'normal':
         e_decays = [0.9991, 0.9993, 0.9995,  0.9997, 0.9998, 0.9999]
         t_decays = [0.9, 0.92, 0.94, 0.96, 0.97, 0.98, 0.99, 0.995, 0.9975, 0.9985, 0.999, 0.9995]
     elif args.grid_search == 'lsl':
@@ -183,35 +185,31 @@ def main(args):
                          custom)
 
     if plotting:
-        # Plotting for report (use the size that is directly given, do not rescale plot)
+        # Plotting for thesis (use the size that is directly given, do not rescale plot)
         plt.rcParams.update({'font.size': 14})
-        # plt.figure()
-        # qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-        #             algo_name, beta, run=debug_run)
-        # plt.ylim(bottom=-5)  # , top=18
-        # # plt.xlim(left=200)
-        # plt.subplots_adjust(left=0.12, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
-        # plt.show()
-        # plt.figure()
-        # action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
-        # run=debug_run)
-        # plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
-        # plt.show()
-
-        # phase_plot(action_list, 0, iter_avg, n_runs, num_episodes, NUM_AGENTS)
-        # plt.show()
+        plt.figure()
+        qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+                    algo_name, beta, run=debug_run)
+        plt.ylim(bottom=args.ylim)  # , top=18
+        # plt.xlim(left=200)
+        plt.subplots_adjust(left=0.12, bottom=0.11, right=0.9, top=0.94, wspace=0.22, hspace=0.35)
+        plt.show()
+        plt.figure()
+        action_plot(action_list, 0, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
+        run=debug_run)
+        plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
+        plt.show()
 
         # plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
         #              delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
         #              interval_plotting, beta, font_size=9)
 
+    if args.plot_sim_value:
         plt.figure()
-        # plt.scatter(algo.j_a_0_0[0][1], algo.j_a_0_0[0][0], label='action (A, A)')
-        # plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='current: A, target: (A, B) ($s_2$)')
-        # plt.scatter(algo.j_a_0_2[0][1], algo.j_a_0_2[0][0], label='current: A, target: (A, C) ($s_3$)')
-        # plt.scatter(algo.j_a_1_0[0][1], algo.j_a_1_0[0][0], label='current: B, target: (B, A) ($s_4$)')
-        plt.scatter(algo.j_a_1_1[0][1], algo.j_a_1_1[0][0], label='current: B, target: (B, B) ($s_{5.1}$)')
-        # plt.scatter(algo.j_a_1_2[0][1], algo.j_a_1_2[0][0], label='current: B, target: (B, C) ($s_6$)')
+        plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='current: A, target: (A, B) ($s_2$)')
+        plt.scatter(algo.j_a_0_2[0][1], algo.j_a_0_2[0][0], label='current: A, target: (A, C) ($s_3$)')
+        plt.scatter(algo.j_a_1_0[0][1], algo.j_a_1_0[0][0], label='current: B, target: (B, A) ($s_4$)')
+        plt.scatter(algo.j_a_1_1[0][1], algo.j_a_1_1[0][0], label='current: B, target: (B, B) ($s_5$)')
         plt.legend()
         plt.xlabel("number of iterations")
         plt.ylabel("similarity value")
@@ -219,19 +217,17 @@ def main(args):
         plt.title(f"Similarity value when $\delta$ < 0 for agent 1")
         plt.show()
 
-        # plt.figure()
-        # # plt.scatter(algo.j_a_0_0[1][1], algo.j_a_0_0[1][0], label='action (A, A)')
-        # plt.scatter(algo.j_a_1_0[1][1], algo.j_a_1_0[1][0], label='current: A, target: (B, A)')
-        # plt.scatter(algo.j_a_2_0[1][1], algo.j_a_2_0[1][0], label='current: A, target: (C, A)')
-        # plt.scatter(algo.j_a_1_1[1][1], algo.j_a_1_1[1][0], label='current: B, target: (B, B)')
-        # plt.scatter(algo.j_a_2_1[1][1], algo.j_a_2_1[1][0], label='current: B, target: (C, B)')
-        # # , s=50, linewidths=0.5, facecolor='none', edgecolors='C4'
-        # plt.legend()
-        # plt.xlabel("number of iterations")
-        # plt.ylabel("similarity value")
-        # plt.xlim(right=10000)
-        # plt.title(f"Similarity value when $\delta$ < 0 for agent 2")
-        # plt.show()
+        plt.figure()
+        plt.scatter(algo.j_a_1_0[1][1], algo.j_a_1_0[1][0], label='current: A, target: (B, A)')
+        plt.scatter(algo.j_a_2_0[1][1], algo.j_a_2_0[1][0], label='current: A, target: (C, A)')
+        plt.scatter(algo.j_a_1_1[1][1], algo.j_a_1_1[1][0], label='current: B, target: (B, B)')
+        plt.scatter(algo.j_a_2_1[1][1], algo.j_a_2_1[1][0], label='current: B, target: (C, B)')
+        plt.legend()
+        plt.xlabel("number of iterations")
+        plt.ylabel("similarity value")
+        plt.xlim(right=10000)
+        plt.title(f"Similarity value when $\delta$ < 0 for agent 2")
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -239,13 +235,13 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--grid_search", type=str, help="parameter to use the same grid search as is used in the "
                                                               "experiments (this replaces e_decays and t_decays args). "
                                                               "Choose between: small and large")
-    parser.add_argument("-e", "--e_decays", type=float,
+    parser.add_argument("-e", "--e_decay", type=float,
                         help="give the epsilon decay parameter to use")
-    parser.add_argument("-t", "--t_decays", type=float,
+    parser.add_argument("-t", "--t_decay", type=float,
                         help="give the temperature decay parameter to use", default=0)
     parser.add_argument("--n_runs", type=int, help="number of runs to execute", default=100)
     parser.add_argument("--num_episodes", type=int, help="number of episodes per run", default=15000)
-    parser.add_argument("--print_runs", type=bool, help="Print runs or not", default=False)
+    parser.add_argument("--print_runs", type=bool, help="Print failed runs or not", default=False)
     parser.add_argument("--write_to_csv", type=bool, help="Write results to csv or not", default=True)
     parser.add_argument("--iter_avg", type=int, help="It takes the average of iter_avg number of iterations to help "
                                                      "smooth out the plots", default=50)
@@ -267,5 +263,10 @@ if __name__ == "__main__":
                         default=6)
     parser.add_argument("--cb", type=int, help="modify reward for joint-action (c,b) in ECG w transition stochasticity",
                         default=0)
+    parser.add_argument("--ylim", type=int, help="Set bottom y limit of Q-value plot")
+    parser.add_argument("--plot_sim_value", type=bool, help="Plot the similarity value plots", default=False)
+    parser.add_argument("--agent", type=int, help="Agent number, 0 or 1")
+    parser.add_argument("--vis_iters", type=int, nargs='+', help="The iteration number for the current and target "
+                                                               "distribution to visualize")
     args = parser.parse_args()
     main(args)

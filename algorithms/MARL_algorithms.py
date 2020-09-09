@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-
 import math
 import matplotlib.pyplot as plt
 from algorithms.similarity_metrics import *
@@ -103,10 +100,7 @@ class MARLAlgorithms(object):
             else:
                 self.sim_metric = None
 
-            # if a == (0, 0) and i < 10000 and s == 0 and pid == 1 and run == debug_run:
-            #     print(f'{i}, {self.sim_metric}')
-
-            if delta < 0 and s == 0 and run == debug_run:  #  and run == debug_run
+            if delta < 0 and s == 0 and run == debug_run:
                 self.collecting_similarity_values_for_plot(pid, a, i)
 
             """ the code below can indicate seven different algorithms
@@ -120,13 +114,7 @@ class MARLAlgorithms(object):
 
             alpha_sim = self.calculate_alpha_sim()
             prob = self.calculate_prob(a, s, pid)  # uses the similarity metric
-            # print(f'sim metric: {self.sim_metric}')
-            # print(f'alpha: {alpha_sim}')
-            # print(f'prob: {prob}')
-
             rand = random.random()
-            # if 70 < i < 300:
-            #     print(f'i: {i}, pid {pid}, a {a}, updated: {rand < prob}, prob: {prob}')
 
             # The Q-learning update
             if delta >= 0 or rand < prob:  # the lenient learning check (higher prob more likely to update)
@@ -195,28 +183,13 @@ class MARLAlgorithms(object):
             else:
                 print('Choose a valid similarity metric')
                 self.sim_metric = None
-
             # Check if I need to visualize
             if i in vis_iters and run == debug_run:
                 vis_pid = vis_pids[vis_iters.index(i)]
                 if vis_pid == pid:
                     self.plot_histogram(dist, next_dist, pid, a, i)
-
-            # if 0 < i < 2500:  # 7000 < i < 9000:
-            #     print(f'i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
-            #           f'Q-value next actions: {self.q_values[pid][next_s]}, Q-value state 0: {self.q_values[pid][0]}, '
-            #           f'next state:{next_s}, temp_prob: {1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))}'
-            #           f'\n{dist}, \n{list(next_dist)}')
         else:
             self.sim_metric = 0  # if sim metric not calculated it is 0
-            # dist = self.return_dist[pid][s][a[pid]]  # current distribution
-            # max_action = self.q_values[pid][next_s].index(max(self.q_values[pid][next_s]))
-            # next_dist = r + self.gamma * np.asarray(self.return_dist[pid][next_s][max_action])
-            # if 0 < i < 500:  # 7000 < i < 9000:
-            #     print(f'else i: {i}, pid {pid}, l: {self.sim_metric}, actions: {a}, r: {r}, '
-            #           f'Q-value next actions: {self.q_values[pid][next_s]}, Q-value state 0: {self.q_values[pid][0]}, '
-            #           f'next state:{next_s}, temp_prob: {1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))}'
-            #           f'\n{dist}, \n{list(next_dist)}\n')
 
     def calculate_alpha_sim(self):
         if self.algo in ['ll', 'lsl', 'lsdl']:
