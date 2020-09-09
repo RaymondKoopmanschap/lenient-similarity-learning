@@ -5,6 +5,8 @@ code is not particularly written with the goal of reuseability for other project
 My thesis can be found here: [Lenient Similarity Learning for Cooperative Multi-Agent Reinforcement Learning](https://scripties.uba.uva.nl/search?id=716643) 
 and extends [Lenient learning](https://dl.acm.org/doi/abs/10.5555/2946645.3007037) with a similarity metric which was introduced by a paper called
 [Likelihood Quantile Networks for Coordinating Multi-Agent Reinforcement Learning](http://ifaamas.org/Proceedings/aamas2020/pdfs/p798.pdf). 
+A concise summary of the thesis is given by my thesis defense which can be found here:<br>
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/6kyZ9ac8bk4/0.jpg)](https://www.youtube.com/watch?v=6kyZ9ac8bk4)
 
 The rough outline of my thesis is that I explain why a similarity metric is useful and compare different similarity in their effectiveness. Next, I incorporate the 
 similarity metric into lenient learning and compare it with the version without a similarity metric. Additionally, I also show in which setting the similarity 
@@ -27,7 +29,7 @@ the MARL_algorithms.py contains seven different algorithms depending on which pa
 <li> <strong>enviroments</strong>: This directory contains all the reinforcement learning 
 environments that are used: the Climb Game, extended Climb Game, the extended stochastic
 climb game and relative overgeneralization 3, the last environment is not used in the thesis but was the
-most difficult environment for [lenient learning](https://dl.acm.org/doi/abs/10.5555/2946645.3007037)</li>
+most difficult environment for lenient learning</li>
 <li><strong>helper_functions</strong>: This one contains all the helper functions divided into 
 general helper functions and plotting</li>
 </ol>
