@@ -12,21 +12,28 @@ NUM_S_PLOT = 1  # 1 is the only option for now
 
 
 def main(args):
+    """
+    The function that runs the multi-agent RL algorithm
+    :param args: see argument parser add the bottom of this script
+    :return: plots the desired statistics of the run
+    """
+    # Initialize the game
     game_type = args.game_type
     bc = args.bc
     cb = args.cb
-    if args.game == "CB":
+    if args.game == "CG":
         game = ClimbGame(game_type=game_type)
-    elif args.game == "ECB":
+    elif args.game == "ECG":
         game = ExtendedClimbGame(game_type=game_type)
-    elif args.game == "ESCB":
+    elif args.game == "ESCG":
         game = ExtendedStochasticClimbGame(bc, cb)
     elif args.game == "RO3":
         game = R03Game()
     else:
-        print("Choose a valid game: CB, ECB, ESCB or RO3")
+        print("Choose a valid game: CG, ECG, ESCG or RO3")
         game = None
 
+    # Get number of states, actions and other parameters
     num_states = game.get_num_states()
     num_actions = game.get_max_num_actions()
     min_r, max_r, leniency, omega = get_lenient_parameters(game, game_type)
@@ -46,6 +53,8 @@ def main(args):
         vis_pids = [args.agent] * len(vis_iters)
     else:
         vis_pids = []
+    if vis_iters is None:
+        vis_iters = []
 
     # Parameters for the algorithm
     beta = args.beta  # alpha = 0.1, needed as parameter if some hysteretic version is used
@@ -84,6 +93,7 @@ def main(args):
           f'beta: {beta}\n'
           f'game: {game.matrix}')
 
+    # The loop used for the grid search
     for t_index, t_decay in enumerate(t_decays):
         correct_policy_results[t_index, 0] = t_decay
         sample_efficiency_std_results[t_index, 0] = t_decay
@@ -103,13 +113,14 @@ def main(args):
 
             algo = MARLAlgorithms(num_states, beta, leniency, e_decay, t_decay, min_r, max_r, game,
                                   algo_name, n_samples, metric=metric, init=min_r)
-            # Training
+            # Main training loop
             for run in tqdm(range(n_runs)):
                 algo.reset_values()
                 sample_counter = 0
+                # Loop for a single run
                 for i in range(num_episodes):
                     next_state = game.new_game()
-
+                    # Loop for a single episode until terminal state is reached
                     while not game.is_terminal():
                         cur_state = next_state
                         poss_actions = game.possible_actions(cur_state)
@@ -125,6 +136,7 @@ def main(args):
                                                         algo, action_list, j_a_dict, actions, joint_actions, sim_metric,
                                                         sim_met_per_j_a, algo_name, NUM_AGENTS)
 
+                    # Increment counter if correct policy is reached to keep track of the total correct policies
                     if np.argmax(algo.q_values[0][0]) == 0 and np.argmax(algo.q_values[1][0]) == 0:
                         sample_counter = sample_counter + 1
                     else:
@@ -142,6 +154,7 @@ def main(args):
                 elif print_runs:  # print if policy is not correct
                     print(run)
 
+            # Print the statistics for correct policies and sample efficiency
             print(f'e_decay: {e_decay}, t_decay: {t_decay}')
             print(f'sample efficiencies: {sample_efficiencies}')
             if len(sample_efficiencies) > 0:
@@ -163,8 +176,8 @@ def main(args):
                          sample_efficiency_mean_results, sample_efficiency_std_results, sample_efficiency_list_results,
                          custom)
 
+    # Q-value and percentage action plots used for the thesis
     if plotting:
-        # Plotting for thesis
         plt.rcParams.update({'font.size': 14})
         plt.figure()
         qvalue_plot(q_values, 0, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
@@ -178,6 +191,7 @@ def main(args):
         plt.subplots_adjust(left=0.11, bottom=0.11, right=0.90, top=0.94, wspace=0.22, hspace=0.35)
         plt.show()
 
+    # Similarity value plots used for the thesis
     if args.plot_sim_value:
         plt.figure()
         plt.scatter(algo.j_a_0_1[0][1], algo.j_a_0_1[0][0], label='current: A, target: (A, B) ($s_2$)')
@@ -201,6 +215,7 @@ def main(args):
         plt.title(f"Similarity value when $\delta$ < 0 for agent 2")
         plt.show()
 
+    # Additional plots to get more insight into the algorithm, not used for the thesis
     if args.plotting_all:
           plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
                        delta_rec, rewards, game, NUM_AGENTS, num_actions, iter_avg, n_runs, num_episodes,
@@ -224,7 +239,7 @@ if __name__ == "__main__":
                                                      "smooth out the plots", default=50)
     parser.add_argument("--game_type", type=str, help="Choose game type: det, ps or fs, not needed for RO3",
                         default='ps')
-    parser.add_argument("--game", type=str, help="Choose game: CB, ECB or RO3", default='ECB')
+    parser.add_argument("--game", type=str, help="Choose game: CG, ECG, ESCG or RO3", default='ECG')
     parser.add_argument("--beta", type=float, help="Choose beta needed for hysteretic learning versions", default=0)
     parser.add_argument("--sim_metric", type=str, help="Choose a similarity metric: ovl, emd, ks, tdl, hellinger, jsd",
                         default='ovl')

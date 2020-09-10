@@ -6,32 +6,17 @@ from algorithms.similarity_metrics import *
 from argparse import ArgumentParser
 
 
-def plotting(axs, data, dist1, dist2, dist_args, sample_sizes, num_samples, dist_type, metric, alpha, count1, count2):
-    if len(dist_args) == 1:
-        if len(sample_sizes) == 1:
-            axs.hist(data, bins=10, range=(0, 1), alpha=alpha, label=metric)
-            axs.set_title(f"{metric}, N = {num_samples}\n"
-                          f"{dist_type} dist: [{dist1[0]}, {dist1[1]}] and [{dist2[0]}, {dist2[1]}]")
-            axs.legend()
-        else:
-            axs[count2].hist(data, bins=10, range=(0, 1), alpha=alpha, label=metric)
-            axs[count2].set_title(f"{metric}, N = {num_samples}\n"
-                                  f"{dist_type} dist: [{dist1[0]}, {dist1[1]}] and [{dist2[0]}, {dist2[1]}]")
-            axs[count2].legend()
-    else:
-        if len(sample_sizes) == 1:
-            axs[count1].hist(data, bins=10, range=(0, 1), alpha=alpha, label=metric)
-            axs[count1].set_title(f"{metric}, N = {num_samples}\n"
-                                  f"{dist_type} dist: [{dist1[0]}, {dist1[1]}] and [{dist2[0]}, {dist2[1]}]")
-            axs[count1].legend()
-        else:
-            axs[count2, count1].hist(data, bins=10, range=(0, 1), alpha=alpha, label=metric)
-            axs[count2, count1].set_title(f"{metric}, N = {num_samples}\n"
-                                          f"{dist_type} dist: [{dist1[0]}, {dist1[1]}] and [{dist2[0]}, {dist2[1]}]")
-            axs[count2, count1].legend()
-
-
 def calculate_boundaries(dist_args1, dist_args2, dist_type, shift):
+    """
+    Calculate minimum and maximum reward possible for certain distribution types.
+    For normal distribution take 3 times standard deviation. These minimum and maximum
+    are used to determine the bin sizes.
+    :param dist_args1: parameter of the distribution
+    :param dist_args2: parameter of the distribution
+    :param dist_type: string indicating which distribution type
+    :param shift: shift of the multi-modal distribution
+    :return: Minimum and maximum reward
+    """
     if dist_type == 'uniform' or dist_type == 'uniform_wide':
         low_1, high_1 = dist_args1[0], dist_args1[1]
         low_2, high_2 = dist_args2[0], dist_args2[1]
@@ -54,7 +39,13 @@ def calculate_boundaries(dist_args1, dist_args2, dist_type, shift):
     return min_r, max_r
 
 
-def change_dist_args(dist_type):
+def get_dist_args(dist_type):
+    """
+    Get the distribution parameters that define the distribution, the first two numbers of each list define the current
+    distribution and the last two define the target distribution.
+    :param dist_type: string that indicates which distribution type
+    :return: list of the different distribution parameters
+    """
     if dist_type == 'uniform':
         dists = [[0, 1, 0, 1], [0, 1, 0.2, 1.2], [0, 1, 0.4, 1.4], [0, 1, 0.6, 1.6], [0, 1, 0.8, 1.8], [0, 1, 1, 2]]
     elif dist_type == 'uniform_wide':
@@ -81,29 +72,59 @@ def change_dist_args(dist_type):
 
 
 def similarity_metric_simple_test(cur_samples, next_samples, bins, min_r, max_r):
-    diff_metric = dif_hist(cur_samples, next_samples, bins)
+    """
+    Test the output of the 6 similarity metrics for a single set of current and next samples
+    :param cur_samples: samples of the current distribution
+    :param next_samples: samples of the target distribution
+    :param bins: the bin sizes
+    :param min_r: minimum reward
+    :param max_r: maximum reward
+    :return: nothing, only prints
+    """
+    ovl_metric = ovl(cur_samples, next_samples, bins)
     emd_metric = emd(cur_samples, next_samples, bins)
     ks_metric = ks(cur_samples, next_samples)
     hell_metric = hellinger(cur_samples, next_samples, bins)
     js_metric = jsd(cur_samples, next_samples, bins)
     tdl_metric = tdl_rq1(cur_samples, next_samples, dist_type='uniform', dist_params=[min_r, max_r])
 
-    print(f'diff: {diff_metric}\nemd: {emd_metric}\nks: {ks_metric}\nhellinger: {hell_metric}\njs: {js_metric}'
+    print(f'ovl: {ovl_metric}\nemd: {emd_metric}\nks: {ks_metric}\nhellinger: {hell_metric}\njs: {js_metric}'
           f'\ntdl: {tdl_metric}')
 
 
 def overlap_plot(metric, means, sample_sizes, d, bin_exp, sample_exp):
+    """
+    Plot the overlap trend line
+    :param metric: the similarity metric
+    :param means: the means for each overlap percentage
+    :param sample_sizes: the used sample size
+    :param d: number of distributions
+    :param bin_exp: bool, bin experiment yes or no
+    :param sample_exp: bool, sample experiment yes or no
+    :return: nothing, it plots
+    """
     for count, i in enumerate(sample_sizes):
         plt.xticks(np.arange(d), ['100%', '80%', '60%', '40%', '20%', '0%'])  # Adapt according to dists used
         if bin_exp:
-            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $bins$ = {i - 1}')
+            plt.plot(np.arange(d), means[count, :], label=f'{metric}, $bins$ = {i - 1}')
         elif sample_exp:
-            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}, $n$ = {i}')
+            plt.plot(np.arange(d), means[count, :], label=f'{metric}, $n$ = {i}')
         else:
-            plt.errorbar(np.arange(d), means[count, :], label=f'{metric}')
+            plt.plot(np.arange(d), means[count, :], label=f'{metric}')
 
 
 def update_means_stds(metric_list, means, stds, count1, count2, count3, bin_experiments):
+    """
+    Collect th mean and standard deviation in a matrix to later use for plotting
+    :param metric_list: list with calculated values for a particular metric
+    :param means: the matrix with all the means for a particular metric
+    :param stds: the matrix with all the standard deviations for a particular metric
+    :param count1: distribution index
+    :param count2: sample size index
+    :param count3: bin number index
+    :param bin_experiments: bool, bin experiment yes or no
+    :return: updated means and stds matrices
+    """
     mean = sum(metric_list) / len(metric_list)
     std = np.std(metric_list)
     if not bin_experiments:
@@ -116,6 +137,11 @@ def update_means_stds(metric_list, means, stds, count1, count2, count3, bin_expe
 
 
 def calculate_deviations(metric_means):
+    """
+    Calculate the total deviation for a particular distribution type
+    :param metric_means: the calculated means of a particular metric
+    :return: total positive and total negative deviation
+    """
     overlap = [1, 0.8, 0.6, 0.4, 0.2, 0]
     deviation = metric_means[0] - overlap
     pos = [round(item, 4) for item in deviation if item >= 0]
@@ -125,14 +151,28 @@ def calculate_deviations(metric_means):
 
 def similarity_metric_experiments(metrics, dist_type, sample_sizes, num_iterations, plot_trend, show_time,
                                   num_bins_list, bin_experiments, sample_experiments, num_runs):
+    """
+    The main function used for calculating all the stuff used for research question 1
+    :param metrics: the used metrics
+    :param dist_type: the used dist type
+    :param sample_sizes: the used sample sizes
+    :param num_iterations: number of iterations
+    :param plot_trend: bool, plot trend yes or no
+    :param show_time: bool, show execution time yes or no
+    :param num_bins_list: list with the number of bins
+    :param bin_experiments: bool, bin experiment yes or no
+    :param sample_experiments: bool, sample experiment yes or no
+    :param num_runs: number of runs
+    :return: prints or plots the desired results
+    """
     # Initializations
     dif_hist_list, emd_list, ks_list, hellinger_list, js_list, tdl_list, ovl_list = [], [], [], [], [], [], []
     tot_hist_time_list, tot_emd_time_list, tot_ks_time_list, tot_h_time_list, tot_js_time_list, tot_tdl_time_list, \
-    tot_ovl_time_list = [], [], [], [], [], [], []
+        tot_ovl_time_list = [], [], [], [], [], [], []
     run_time_begin = time.time()
     shifts = [0, 0.1, 0.2, 0.3, 0.4, 0.5]  # used for multi-modal
 
-    dist_args = change_dist_args(dist_type)
+    dist_args = get_dist_args(dist_type)
     d = len(dist_args)
     if bin_experiments:
         s = len(num_bins_list)

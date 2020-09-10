@@ -1,8 +1,11 @@
 import random
-import numpy as np
 
 
 class ExtendedClimbGame(object):
+    """
+    The extended Climb Game as used in my thesis introduced in section 4.3, figure 1.
+    There is the deterministic (det), partially stochastic (ps) and fully stochastic (fs) version
+    """
     def __init__(self, game_type='det'):
         self.num_agents = 2
         self.num_states = 10

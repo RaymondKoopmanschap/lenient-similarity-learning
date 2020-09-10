@@ -1,6 +1,8 @@
 # Aim of the project
 The goal of this repository is to allow interested readers to reproduce the results of my thesis and to experiment with different hyperparameters. Note that the
 code is not particularly written with the goal of reuseability for other projects in mind. That being said, the code is documented and should be understandable. 
+It also has a requirements.txt so to get started just clone the repository and type
+`pip install -r requirements.txt` in your virtual environment.
 
 My thesis can be found here: [Lenient Similarity Learning for Cooperative Multi-Agent Reinforcement Learning](https://scripties.uba.uva.nl/search?id=716643) 
 and extends [Lenient learning](https://dl.acm.org/doi/abs/10.5555/2946645.3007037) with a similarity metric which was introduced by a paper called
@@ -57,7 +59,7 @@ figure 7b: use the  `tdl_for_plot(...)` function with the same input as the thes
 
 Section 5.2.2 Computational efficiency, figure 9<br>
 `python rq1_experiments.py --metrics o e k h j t --dist_type uniform --sample_sizes 10 
---num iterations 10000 --num_bins 10 --show_time True --num_runs 10`<br>
+--num_iterations 10000 --num_bins 10 --show_time True --num_runs 10`<br>
 This calculates the computation time for 10 samples, this has to be executed for 10, 20, 50, 100
 ,200, 500 and 1000 and these numbers have to be plotted to obtain figure 9. 
 
@@ -93,10 +95,10 @@ values are plotted we obtain figure 16a and 16b.
 
 ### RQ2&3 preliminary experiments (section 5.1)
 Section 5.1.2 figure 2, Q-learning<br>
-`python rq2_and_3_experiments.py --e_decays 0.9996 --n_runs 100 --num_episodes 10000 --iter_avg 50 
---game_type det --game CB --algo_name hl --beta 0.1 --ylim -10`<br>
+`python rq2_and_3_experiments.py --e_decay 0.9996 --n_runs 100 --num_episodes 10000 --iter_avg 50 
+--game_type det --game CG --algo_name hl --beta 0.1 --ylim -10`<br>
 Which after using the default settings reduces to<br>
-`python rq2_and_3_experiments.py --e_decay 0.9996 --num_episodes 10000 --game_type det --game CB 
+`python rq2_and_3_experiments.py --e_decay 0.9996 --num_episodes 10000 --game_type det --game CG 
 --algo_name hl --beta 0.1 --ylim -10`<br>
 e_decay indicates the epsilon decay, game type is deterministic, partially stochastic or fully
 stochasticy, game is Climb Game (CB), algo_name is hysteretic learning (hl) **but** with beta=0.1 
@@ -109,7 +111,7 @@ correct algo_name and parameters.
 **Grid searches and heatmaps**<br>
 This section uses grid searches, for example section 5.3.2 table 19 can be obtained by:<br>
 `python rq2_and_3_experiments.py --grid_search normal --num_episodes 15000 --game_type det 
---game ECB --algo_name ll`
+--game ECG --algo_name ll`
 There are two grid searches used, normal and lsl. Lsl is normal without the temperature decays. 
 Additionally, for the lsl the similarity metric can be specified by 
 --sim_metric ovl (or emd, ks, tdl, hellinger, jsd). The results will be stored into a directory with
@@ -120,7 +122,7 @@ All the other heatmaps can be obtained in a similar way.
 
 **Similarity value plots**<br>
 The similarity value plots, for example section 5.3.3 figure 20 can be obtained by<br>
-`python rq2_and_3_experiments.py --e_decay 0.9997 --num_episodes 15000 --game_type ps --game ECB --algo_name lsl 
+`python rq2_and_3_experiments.py --e_decay 0.9997 --num_episodes 15000 --game_type ps --game ECG --algo_name lsl 
 --n_runs 1 --plot_sim_value True --debug_run 0`<br>
 We have specified n_runs=1, indicating a single run and plot_sim_value = True. Subsequently, debug_run
 shows for which run we show the Q-value and similarity value plots. This can also be used to debug
@@ -128,7 +130,7 @@ since you can single out a failed run when you run 100 runs.
 
 **Histogram plots**<br>
 Finally, the histogram plots, below the reproduction of figure 21<br>
-`python rq2_and_3_experiments.py --e_decay 0.9997 --num_episodes 15000 --game_type ps --game ECB 
+`python rq2_and_3_experiments.py --e_decay 0.9997 --num_episodes 15000 --game_type ps --game ECG 
 --algo_name lsl --n_runs 1 --debug_run 0 --agent 0 --vis_iters 75 93 106 811`<br>
 Here you also need to specify the --debug_run parameter and additionally for which agent you want
 to visualize and which iterations (vis_iters). Only iterations are visualized where the agent needed

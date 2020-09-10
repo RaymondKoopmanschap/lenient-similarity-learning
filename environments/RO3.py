@@ -2,6 +2,10 @@ import random
 
 
 class R03Game(object):
+    """
+    Relative Overgeneralization 3 as used in the original lenient learning paper (Wei and Luke, 2016).
+    There is the deterministic (det), partially stochastic (ps) and fully stochastic (fs) version
+    """
     def __init__(self):
         self.num_states = 3
         self.num_max_actions = 3

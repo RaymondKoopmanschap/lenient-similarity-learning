@@ -1,8 +1,11 @@
 import random
-import numpy as np
 
 
 class ExtendedStochasticClimbGame(object):
+    """
+    The extended stochastic Climb Game as used in my thesis introduced in section 5.3.4, figure 23.
+    There is only the partially stochastic (ps) version
+    """
     def __init__(self, bc=6, cb=0):
         self.num_agents = 2
         self.num_states = 11

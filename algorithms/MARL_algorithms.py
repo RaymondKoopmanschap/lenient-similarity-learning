@@ -58,6 +58,9 @@ class MARLAlgorithms(object):
         self.j_a_2_2 = [[[], []], [[], []]]
 
     def reset_values(self):
+        """
+        Reset the values after run completed
+        """
         self.q_values = [[[self.init for _ in range(self.num_a)]
                           for _ in range(self.num_states)] for _ in range(self.num_pids)]
         self.t_values = [[[self.MaxTemp for _ in range(self.num_a)]
@@ -71,19 +74,36 @@ class MARLAlgorithms(object):
                         for _ in range(self.num_pids)]
         self.sim_metric = 0
 
-    def select_action(self, pos_a, state, pid_id):
-        """Selects an action for a specific pid.
-           input: pid number (0 or 1)
-           output: action (integer)"""
+    def select_action(self, poss_a, state, pid_id):
+        """
+        Selects an action for a specific pid.
+        :param poss_a: possible actions
+        :param state: the state of the agent
+        :param pid_id: the agent id
+        :return: action
+        """
         # Epsilon-greedy
         rand = random.random()
         if rand < self.epsilon:
-            action = random.choice(pos_a)
+            action = random.choice(poss_a)
         else:
-            action = self.q_values[pid_id][state].index(max(self.q_values[pid_id][state][0:len(pos_a)]))
+            action = self.q_values[pid_id][state].index(max(self.q_values[pid_id][state][0:len(poss_a)]))
         return action
 
     def next_step(self, a, s, next_s, r, i, debug_run, run, vis_iters, vis_pids):
+        """
+        Execute a single RL step
+        :param a: action
+        :param s: state
+        :param next_s: next state
+        :param r: reward
+        :param i: iteration
+        :param debug_run: specify if I want to show plots for a specific run
+        :param run: run number
+        :param vis_iters: the iterations I want to visualize for the current and target distribution
+        :param vis_pids: for which agent I want to visualize these iterations
+        :return: nothing
+        """
         self.epsilon = self.epsilon * self.epsilon_decay
         for pid in range(self.num_pids):
             # Calculating delta
@@ -125,6 +145,7 @@ class MARLAlgorithms(object):
                 self.q_values[pid][s][a[pid]] = r
             else:
                 pass
+
             # Temperature update
             if next_s != 'terminal':
                 self.t_values[pid][s][a[pid]] = self.t_decay * ((1 - self.temp_diffusion)*self.t_values[pid][s][a[pid]]
@@ -133,7 +154,7 @@ class MARLAlgorithms(object):
             else:
                 self.t_values[pid][s][a[pid]] = self.t_decay * self.t_values[pid][s][a[pid]]
 
-            # Building up the list
+            # Building up the return distributions
             if self.dist:
                 if delta >= 0 or rand < prob:
                     if next_s != 'terminal':
@@ -151,6 +172,9 @@ class MARLAlgorithms(object):
                             self.dist_id[pid][s][a[pid]] = 0
 
     def calculate_similarity(self, a, s, next_s, r, pid, delta, i, vis_iters, vis_pids, run, debug_run):
+        """
+        Calculates the similarity value
+        """
         if next_s == 'terminal':
             self.sim_metric = 1  # you can't have miscoordination, because you completed the game
         elif len(self.return_dist[pid][s][a[pid]]) == self.n_samples and delta < 0:
@@ -162,8 +186,6 @@ class MARLAlgorithms(object):
             # Calculate the similarity metric
             if len(next_dist) == 0:
                 self.sim_metric = 0
-            elif self.metric_name == 'dif_hist':
-                self.sim_metric = dif_hist(dist, next_dist, self.bins)
             elif self.metric_name == 'ovl':
                 self.sim_metric = ovl(dist, next_dist, self.bins)
             elif self.metric_name == 'ks':
@@ -189,6 +211,9 @@ class MARLAlgorithms(object):
             self.sim_metric = 0  # if sim metric not calculated it is 0
 
     def calculate_alpha_sim(self):
+        """
+        Calculates correct alpha depending on the algorithm used
+        """
         if self.algo in ['ll', 'lsl', 'lsdl']:
             return self.alpha
         elif self.algo in ['lhl', 'hl']:
@@ -200,6 +225,9 @@ class MARLAlgorithms(object):
             exit()
 
     def calculate_prob(self, a, s, pid):
+        """
+        Calculates the probability which can be the similarity metric or something else depending on the algorithm used
+        """
         if self.algo in ['ll', 'lhl', 'lhsl']:
             return 1 - np.exp(-1 / (self.theta * self.t_values[pid][s][a[pid]]))
         elif self.algo in ['lsl']:
@@ -214,6 +242,9 @@ class MARLAlgorithms(object):
             exit()
 
     def collecting_similarity_values_for_plot(self, pid, actions, iteration):
+        """
+        Collecting the similarity values for the similarity value plot
+        """
         if actions == (0, 0):
             self.j_a_0_0[pid][0].append(self.sim_metric)
             self.j_a_0_0[pid][1].append(iteration)
@@ -243,6 +274,9 @@ class MARLAlgorithms(object):
             self.j_a_2_2[pid][1].append(iteration)
 
     def plot_histogram(self, cur_dist, next_dist, pid, a, i):
+        """
+        Plot the histogram for the specified current and target distribution for a particular agent
+        """
         action_map = {0: 'A', 1: 'B', 2: 'C'}
         if pid == 0:
             action = action_map[a[0]]

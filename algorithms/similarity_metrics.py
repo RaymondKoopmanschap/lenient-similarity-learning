@@ -4,20 +4,8 @@ from scipy.stats import norm
 from scipy.spatial import distance
 
 
-def prop_metric(dist, reward):
-    return dist.count(reward) / len(dist)
-
-
-def dif_hist(cur_samples, next_samples, bins):
-    cur_hist, _ = np.histogram(cur_samples, bins)
-    next_hist, _ = np.histogram(next_samples, bins)
-    cur_samples = cur_hist / len(cur_samples)
-    next_samples = next_hist / len(next_samples)
-    total_diff = sum(abs(cur_samples - next_samples))
-    return 1 - total_diff / 2  # 1 - diff because it is a similarity metric
-
-
 def emd(cur_samples, next_samples, bins=None):
+    # Earth mover distance
     if bins is not None:
         cur_hist, _ = np.histogram(cur_samples, bins)
         next_hist, _ = np.histogram(next_samples, bins)
@@ -34,6 +22,7 @@ def emd(cur_samples, next_samples, bins=None):
 
 
 def ks(cur_samples, next_samples, bins=None):
+    # Kolmogorov-Smirnov
     if bins is not None:
         cur_samples = np.digitize(cur_samples, bins)
         next_samples = np.digitize(next_samples, bins)
@@ -49,8 +38,13 @@ def ks(cur_samples, next_samples, bins=None):
 
 
 def find_quantile(base_samples, target_samples, tau):
-    """input: target samples, distribution samples and tau are the uniform samples used for the distribution samples
-       output: the quantiles (probability) of the respective target samples: F(a) and F(b)"""
+    """
+    Find the quantiles used for the TDL
+    :param base_samples: current distribution samples
+    :param target_samples: target distribution samples
+    :param tau: the uniform samples used for the distribution samples
+    :return:  the quantiles (probability) of the respective target samples: F(a) and F(b)
+    """
     # All the target sample indices that are out of bounds are either 0 or len(dist) with np.searchsorted.
     index = np.searchsorted(base_samples, target_samples)  #
     index[index == len(base_samples)] = 0  # To make sure it doesn't go out of bounds in calculation of frac_line and
@@ -68,10 +62,11 @@ def find_quantile(base_samples, target_samples, tau):
 
 
 def tdl_for_plot(base_samples, target_samples, tau, type='sum'):
-    """input: distribution and target samples coming from the return distribution. And tau are the uniform samples
-              used for the distribution samples.
-       output: tdl
-       there are three types possible: sum, product (calculates likelihood) or log (calculates log-likelihood)"""
+    """
+    Calculate the time difference likelihood in such a way that the intermediate values can be used for the plot
+    :param type: there are three types possible: sum, product (calculates likelihood) or log (calculates log-likelihood)
+    :return: Time Difference Likelihood similarity value
+    """
     base_samples = np.sort(np.array(base_samples))
     target_samples = np.sort(target_samples)
     if type == 'sum' or type == 'log':
@@ -101,6 +96,7 @@ def tdl_for_plot(base_samples, target_samples, tau, type='sum'):
 
 
 def tdl(base_samples, target_samples, tau):
+    # Time Difference Likelihood
     if len(target_samples) < 2:
         return 0
     base_samples = np.sort(np.array(base_samples))
@@ -149,6 +145,7 @@ def tdl_rq1(cur_samples, next_samples, dist_type, dist_params):
 
 
 def hellinger(cur_samples, next_samples, bins):
+    # Hellinger distance
     cur_hist, _ = np.histogram(cur_samples, bins)
     next_hist, _ = np.histogram(next_samples, bins)
     cur_prob_dist = cur_hist / len(cur_samples)
@@ -158,6 +155,7 @@ def hellinger(cur_samples, next_samples, bins):
 
 
 def jsd(cur_samples, next_samples, bins):
+    # Jensen-Shannon divergence
     cur_hist, _ = np.histogram(cur_samples, bins)
     next_hist, _ = np.histogram(next_samples, bins)
     cur_prob_dist = cur_hist / len(cur_samples)
@@ -167,6 +165,7 @@ def jsd(cur_samples, next_samples, bins):
 
 
 def ovl(cur_samples, next_samples, bins):
+    # Overlapping coefficient
     cur_hist, _ = np.histogram(cur_samples, bins)
     next_hist, _ = np.histogram(next_samples, bins)
     cur_prob_dist = cur_hist / len(cur_samples)

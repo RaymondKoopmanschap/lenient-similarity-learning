@@ -11,6 +11,7 @@ import matplotlib
 def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joint_actions, action_list,
                  delta_rec, rewards, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
                  beta, font_size):
+    """The main function for plotting all kind of plots to get insight into the algorithm"""
     plt.rcParams.update({'font.size': font_size})  # change to 14 for report
     state = 0
     if 's' in algo_name:
@@ -40,6 +41,7 @@ def plotting_all(algo_name, j_a_dict, sim_metric, sim_met_per_j_a, q_values, joi
 
 def collect_values_for_plotting(cur_state, next_state, reward, rewards, delta_rec, q_values, algo, action_list,
                                 j_a_dict, actions, joint_actions, sim_metric, sim_met_per_j_a, algo_name, num_agents):
+    """This collects the values for plotting"""
     if next_state == 'terminal':
         rewards.append(reward)
 
@@ -74,6 +76,7 @@ def collect_values_for_plotting(cur_state, next_state, reward, rewards, delta_re
 
 
 def plot_standard_deviation(means, std, x_axis, state, num_agents, num_actions):
+    """Plot standard deviation if set to true"""
     for agent in range(num_agents):
         for action in range(num_actions):
             plt.fill_between(
@@ -101,6 +104,7 @@ def shape_dim_for_plot(iter_avg, n_runs, data, run):
 
 
 def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval):
+    """This function is used for the Q-value and percentage action plots"""
     markers_on1 = np.linspace(start=0, stop=(num_episodes/iter_avg)-interval/iter_avg,
                              num=int(num_episodes/interval)).astype(int).tolist()
     step_size = markers_on1[1] - markers_on1[0]
@@ -147,6 +151,7 @@ def plot_2agent_3actions(x_axis, means, state, num_episodes, iter_avg, interval)
 
 def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
                 algo_name, beta, plot_std=False, run=None):
+    """Plots the Q-value of the two agents and three actions"""
     avg_q_values = shape_dim_for_plot(iter_avg, n_runs, q_values, run)
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
     means = avg_q_values.mean(axis=3)
@@ -185,6 +190,7 @@ def qvalue_plot(q_values, state, game, num_agents, num_actions, iter_avg, n_runs
 
 def action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, num_episodes, interval_plotting,
                 plot_std=False, run=None):
+    """Plots the percentage actions of the 2 agents and 3 actions"""
     perc_actions = shape_dim_for_plot(iter_avg, n_runs, action_list, run)
     means = perc_actions.mean(axis=3) * 100  # convert to percentage
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
@@ -198,6 +204,7 @@ def action_plot(action_list, state, num_agents, num_actions, iter_avg, n_runs, n
 
 
 def sim_metric_plot(sim_metric, iter_avg, n_runs, num_episodes, plot_std=False, run=None):
+    """Plot the similarity value for each episode"""
     avg_sim_metric = shape_dim_for_plot(iter_avg, n_runs, sim_metric, run)
     mean_runs = np.nanmean(avg_sim_metric, axis=0)
     x_axis = np.arange(0, num_episodes / iter_avg) * iter_avg
@@ -213,6 +220,7 @@ def sim_metric_plot(sim_metric, iter_avg, n_runs, num_episodes, plot_std=False, 
 
 
 def plot_sim_metric_j_a(sim_met_per_j_a, j_a_dict, state, iter_avg, n_runs, num_episodes, run=None):
+    """Plot the similarity metric for each joint-action"""
     avg_sim_metric = shape_dim_for_plot(iter_avg, n_runs, sim_met_per_j_a, run)
     means = np.nanmean(avg_sim_metric, axis=2)
     x_axis = np.arange(0, num_episodes / iter_avg) * iter_avg
@@ -226,6 +234,7 @@ def plot_sim_metric_j_a(sim_met_per_j_a, j_a_dict, state, iter_avg, n_runs, num_
 
 
 def avg_reward_plot(rewards, game, iter_avg, n_runs, num_episodes, plot_std=True, run=None):
+    """Plot the average reward obtained"""
     avg_rewards = shape_dim_for_plot(iter_avg, n_runs, rewards, run)
     mean_runs = avg_rewards.mean(axis=0)
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
@@ -245,6 +254,7 @@ def avg_reward_plot(rewards, game, iter_avg, n_runs, num_episodes, plot_std=True
 
 
 def joint_action_plot(joint_actions, j_a_dict, state, iter_avg, n_runs, num_episodes, run=None):
+    """Plot the percentage that each joint-action is chosen per iter_avg"""
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
     perc_joint_actions = shape_dim_for_plot(iter_avg, n_runs, joint_actions, run)
     means = perc_joint_actions.mean(axis=2)
@@ -257,6 +267,7 @@ def joint_action_plot(joint_actions, j_a_dict, state, iter_avg, n_runs, num_epis
 
 
 def phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents, run=None):
+    """Plots a phase plot that indicates the percentage of actions in a different way"""
     perc_actions = shape_dim_for_plot(iter_avg, n_runs, action_list, run)
     means = perc_actions.mean(axis=3)
     phase_index = [[] for _ in range(num_agents)]
@@ -280,6 +291,7 @@ def phase_plot(action_list, state, iter_avg, n_runs, num_episodes, num_agents, r
 
 
 def plot_perc_miscoordination(joint_actions, state, iter_avg, n_runs, num_episodes, run=None):
+    """Plot percentage of miscoordination per agent"""
     perc_joint_actions = shape_dim_for_plot(iter_avg, n_runs, joint_actions, run)
     means = perc_joint_actions.mean(axis=2)
     x_axis = np.arange(0, num_episodes/iter_avg) * iter_avg
@@ -296,6 +308,7 @@ def plot_perc_miscoordination(joint_actions, state, iter_avg, n_runs, num_episod
 
 
 def plot_delta(delta):
+    """Plot delta"""
     plt.plot(delta, label='delta')
     plt.title('delta value for each time step')
     plt.xlabel('number of iterations')
@@ -304,6 +317,7 @@ def plot_delta(delta):
 
 
 def kolmogorov_smirnov_plot():
+    """Plot to illustrate the Kolmogorov-Smirnov statistic"""
     np.random.seed(3)
     size = 30
     data1 = np.random.normal(loc=0, scale=10.0, size=size+1)
@@ -337,6 +351,7 @@ def kolmogorov_smirnov_plot():
 
 
 def multi_modal_plot_for_tdl():
+    """Plots a normal current distribution and a multi-modal target distribution, figure 8 in my thesis"""
     mu_1 = 0
     mu_2 = 10
     mu_3 = 5

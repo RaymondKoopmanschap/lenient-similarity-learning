@@ -4,6 +4,10 @@ _NUM_PLAYERS = 2
 
 
 class ClimbGame(object):
+    """
+    The Climb Game as used in the original lenient learning paper (Wei and Luke, 2016).
+    There is the deterministic (det), partially stochastic (ps) and fully stochastic (fs) version
+    """
     def __init__(self, game_type='det'):
         self.num_agents = 2
         self.num_states = 1
